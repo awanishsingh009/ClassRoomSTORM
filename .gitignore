@@ -1,0 +1,39 @@
+__pycache__/
+*.py[cod]
+*.pyo
+
+.venv/
+venv/
+env/
+
+.worktrees/
+
+results/*
+!results/.gitkeep
+!results/reconstructions/
+!results/reconstructions/.gitkeep
+!results/virtual_experiments/
+!results/virtual_experiments/.gitkeep
+
+*.log
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# LaTeX build artefacts (only the .tex sources and compiled .pdf are kept)
+*.aux
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+docs/latex/build/
+
+# Generated reconstruction / virtual-experiment run folders
+results/reconstructions/*
+!results/reconstructions/.gitkeep
+results/virtual_experiments/*
+!results/virtual_experiments/.gitkeep
+
+# QA artefacts: kept on disk, not tracked
+qa/

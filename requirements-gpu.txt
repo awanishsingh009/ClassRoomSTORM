@@ -1,0 +1,18 @@
+# Optional GPU backend for ClassRoomSTORM Reconstruction.
+# Install after requirements.txt on machines with an NVIDIA GPU.
+#
+# Command used on the current Windows test machine:
+# python -m pip install torch --index-url https://download.pytorch.org/whl/cu126 --trusted-host download.pytorch.org --trusted-host download-r2.pytorch.org
+#
+# Current support status:
+# - NVIDIA CUDA: supported experimentally through PyTorch CUDA.
+# - AMD GPU: not currently implemented in this app.
+# - Intel GPU: not currently implemented in this app.
+# - MacBook / Apple Silicon: PyTorch MPS support is possible future work, but not currently implemented.
+# For AMD, Intel, and MacBook systems, use Serial, Auto CPU, or CPU fallback behavior.
+
+--index-url https://download.pytorch.org/whl/cu126
+--trusted-host download.pytorch.org
+--trusted-host download-r2.pytorch.org
+
+torch

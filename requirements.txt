@@ -1,0 +1,12 @@
+# Standard CPU requirements for ClassRoomSTORM V1.
+# GPU support is optional and lives in requirements-gpu.txt.
+#
+# Minimum versions only (not exact pins), tested with Python 3.10-3.13
+# on Windows and macOS. For a fully reproducible classroom install,
+# generate a pinned requirements-lock.txt with `pip freeze`.
+
+numpy>=1.26
+opencv-python>=4.8
+matplotlib>=3.8
+Pillow>=10.0
+PySide6>=6.6

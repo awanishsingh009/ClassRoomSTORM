@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+title: ClassRoomSTORM Studio
+message: "If you use ClassRoomSTORM Studio, please cite this software release."
+type: software
+authors:
+  - family-names: Singh
+    given-names: Awanish Pratap
+    affiliation: Institute of Biomedical Optics, University of Lübeck
+version: "1.1.0"
+date-released: "2026-05-20"
+abstract: "A classroom teaching toolkit for virtual blinking experiments and pixel-first stochastic localization reconstruction."
+license: MIT

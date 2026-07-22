@@ -1,0 +1,821 @@
+% ======================================================================
+%  ClassRoomSTORM Theory Notes (V2 documentation)
+%  Companion to ClassRoomSTORM Studio V1.1.
+%  Self-contained LaTeX source. Compile from this directory with:
+%      pdflatex ClassRoomSTORM_Theory.tex   (run twice)
+%  The bibliography is embedded (no bibtex/biber needed).
+%  Figures live in ../figures/theory/.
+% ======================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable}
+\usepackage{hyperref}
+\usepackage{cleveref}
+
+\geometry{margin=24mm}
+\graphicspath{{../figures/theory/}{../figures/help/}{figures/theory/}{figures/help/}}
+\hypersetup{colorlinks=true, linkcolor=blue!45!black, urlcolor=blue!45!black,
+  citecolor=blue!45!black,
+  pdftitle={ClassRoomSTORM Theory Notes},
+  pdfauthor={Awanish Pratap Singh},
+  pdfsubject={Physics of localization-based super-resolution microscopy}}
+\setlist[itemize]{itemsep=2pt, topsep=4pt}
+\setlist[enumerate]{itemsep=3pt, topsep=4pt}
+
+\DeclareMathOperator{\erf}{erf}
+\newcommand{\Var}{\operatorname{Var}}
+
+% ---- Callout boxes --------------------------------------------------
+\newtcolorbox{csnote}[1][Note]{breakable, colback=blue!4, colframe=blue!55!black,
+  fonttitle=\bfseries, coltitle=blue!55!black, title={#1}, boxrule=0.5pt, arc=2pt}
+\newtcolorbox{cswarn}[1][Scope and limitations]{breakable, colback=red!5,
+  colframe=red!60!black, fonttitle=\bfseries, coltitle=red!60!black, title={#1},
+  boxrule=0.5pt, arc=2pt}
+\newtcolorbox{csideal}[1][The statistical ideal (background only)]{breakable,
+  colback=violet!5, colframe=violet!55!black, fonttitle=\bfseries,
+  coltitle=violet!55!black, title={#1}, boxrule=0.5pt, arc=2pt}
+\newtcolorbox{csderiv}[1][Derivation (optional)]{breakable, colback=gray!8,
+  colframe=gray!55!black, fonttitle=\bfseries, coltitle=gray!45!black, title={#1},
+  boxrule=0.5pt, arc=2pt}
+
+\newcommand{\file}[1]{\texttt{#1}}
+\newcommand{\app}{ClassRoomSTORM}
+
+\title{\textbf{\app{} Theory Notes}\\[2pt]\large Diffraction, Blinking, and the
+       Physics of Localization Microscopy}
+\author{Awanish Pratap Singh}
+\date{Companion to \app{} Studio, software version 1.1}
+
+% ======================================================================
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+\noindent These notes explain the physics behind \app{} Studio V1.1. They build,
+step by step, from the diffraction limit of an ordinary microscope to the idea of
+localization microscopy: why a blurred spot can still be \emph{located} far more
+precisely than it can be \emph{resolved}, and how many such locations accumulate
+into a sharp image. The central message is a distinction students should carry
+away: \emph{resolution} --- how finely an instrument separates two points in a
+single snapshot --- is set by optical blur, whereas \emph{localization
+precision} --- how well the centre of one isolated spot is known --- is a
+statistical quantity set by photon counts, background, and noise. The final
+sections describe exactly how \app{} V1.1 reconstructs an image, and state
+honestly what the centroid method does and does not do. The V1.1 release adds
+the unified Studio launcher while retaining that transparent teaching
+reconstruction method.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% ======================================================================
+\section{Introduction: The Resolution Problem}
+\label{sec:intro}
+
+A microscope cannot show arbitrarily fine detail. Two points of light that are
+close enough together blur into a single smudge, no matter how good the lens.
+This limit --- the \emph{diffraction limit} --- has been understood since the
+nineteenth century~\cite{abbe1873} and sits at roughly half the wavelength of
+light, about $200$--$250$~nm for visible light~\cite{bechhoefer2015,
+schermelleh2019}.
+
+For more than a century this was considered an unbreakable barrier. Modern
+\emph{super-resolution} microscopy sidesteps it. One especially elegant family of
+methods --- \emph{single-molecule localization microscopy} (SMLM), which includes
+STORM and PALM --- does so with a simple statistical trick: never let two nearby
+emitters be visible at the same time. If only a few, well-separated emitters
+glow in any one frame, each appears as an isolated blurred spot, and the
+\emph{centre} of an isolated spot can be estimated very precisely. Repeating this
+over thousands of frames and accumulating the centres yields a far sharper
+picture than any single frame~\cite{huang2010, sigal2018}.
+
+\app{} is a teaching application that reproduces the \emph{statistical and
+computational logic} of SMLM. Its \emph{Virtual Experiment} generates blinking
+videos with controllable blur, brightness, and noise; its \emph{SR
+Reconstruction} workflow locates the spots and accumulates them. These notes
+explain the physics this software embodies. They are meant to be read alongside
+the \emph{\app{} Help} document, which explains the buttons and screens.
+
+\begin{csnote}[A note on scope]
+\app{} is a learning tool. It is not a fluorescence microscope, and its
+reconstruction uses a deliberately simple, transparent estimator rather than a
+research-grade one. Throughout these notes, material describing the
+\emph{ideal} statistical method is clearly marked in violet boxes; the running
+text and \cref{sec:pipeline} describe what \app{} V1.1 actually does.
+\end{csnote}
+
+% ======================================================================
+\section{The Diffraction Limit}
+\label{sec:diffraction}
+
+When light from a single point passes through a lens of finite size, diffraction
+spreads it into a small pattern of rings called the \emph{Airy pattern}:
+\begin{equation}
+  I(r) = I_0\left[\frac{2J_1(\alpha r)}{\alpha r}\right]^{2},
+  \qquad \alpha = \frac{2\pi\,\mathrm{NA}}{\lambda},
+  \label{eq:airy}
+\end{equation}
+where $r$ is the radial distance from the centre, $I_0$ is the peak intensity,
+$J_1$ is the first-order Bessel function, $\lambda$ is the wavelength of light,
+and $\mathrm{NA}$ is the \emph{numerical aperture} of the lens (a measure of how
+wide a cone of light it collects). A perfect point of light is therefore never
+imaged to a point --- it is imaged to a small bright disc.
+
+Two points can only be told apart if their discs do not overlap too much. Abbe's
+criterion gives the smallest resolvable separation~\cite{abbe1873,
+bechhoefer2015}:
+\begin{equation}
+  d_{\mathrm{Abbe}} \simeq \frac{\lambda}{2\,\mathrm{NA}}.
+  \label{eq:abbe}
+\end{equation}
+A closely related statement, the Rayleigh criterion, places the threshold where
+the peak of one Airy disc falls on the first dark ring of the
+other~\cite{bechhoefer2015, prakash2024}:
+\begin{equation}
+  d_{\mathrm{Rayleigh}} \simeq \frac{0.61\,\lambda}{\mathrm{NA}}.
+  \label{eq:rayleigh}
+\end{equation}
+
+\begin{csnote}[Worked number]
+For green light, $\lambda \approx 550$~nm, and a good objective,
+$\mathrm{NA}\approx 1.4$. Then $d_{\mathrm{Abbe}} \approx 550/(2\times1.4)
+\approx 196$~nm and $d_{\mathrm{Rayleigh}} \approx 0.61\times550/1.4 \approx
+240$~nm. This is the few-hundred-nanometre barrier that super-resolution methods
+must overcome.
+\end{csnote}
+
+\Cref{fig:rayleigh} shows how two emitters merge as their separation shrinks
+toward this limit. The key point for what follows:
+\cref{eq:abbe,eq:rayleigh} describe \emph{resolution} --- the ability to
+separate two points that are visible \emph{at the same time}. They say nothing
+about how well the position of a \emph{single, isolated} point can be measured.
+That is a different question, and it has a much more optimistic answer.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{T2_rayleigh}
+  \caption{The diffraction limit. Two emitters imaged as Airy point-spread
+  functions: clearly resolved when well separated (left), marginally resolved at
+  the Rayleigh separation (centre), and merged into a single blur when too close
+  (right).}
+  \label{fig:rayleigh}
+\end{figure}
+
+% ======================================================================
+\section{The Point Spread Function}
+\label{sec:psf}
+
+The image of a single point source is called the \emph{point spread function}
+(PSF). The Airy pattern of \cref{eq:airy} is the exact PSF of an ideal lens, but
+for calculations a simpler model is almost always used: a two-dimensional
+Gaussian~\cite{thompson2002, small2014}. An isolated emitter is modelled as
+\begin{equation}
+  I(x,y) = b + \frac{N}{2\pi\sigma^{2}}
+           \exp\!\left[-\frac{(x-x_0)^2 + (y-y_0)^2}{2\sigma^{2}}\right],
+  \label{eq:gauss}
+\end{equation}
+where $(x_0,y_0)$ is the true emitter position, $N$ is the total number of
+signal photons, $b$ is a background level, and $\sigma$ is the \emph{width} of
+the PSF. The width is set by the optics and the pixel size $a$ of the camera; a
+useful approximate relation is~\cite{thompson2002}
+\begin{equation}
+  \sigma \approx 0.21\,\frac{\lambda}{\mathrm{NA}\cdot a}.
+  \label{eq:sigma}
+\end{equation}
+The Gaussian is not exact --- it ignores the Airy rings --- but it captures the
+central bump well (\cref{fig:airy}) and makes the algebra of localization
+tractable.
+
+In \app{}, the \emph{Virtual Experiment} renders each blinker as a Gaussian
+spot, and you set its width directly with the \texttt{sigma\_px} control.
+Choosing a large $\sigma$ is the same as building a more strongly
+diffraction-limited ``microscope.''
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{T1_airy_gaussian}
+  \caption{(a) The Airy point-spread function of an ideal lens. (b) Its central
+  lobe is well approximated by a Gaussian; the rings are neglected.}
+  \label{fig:airy}
+\end{figure}
+
+% ======================================================================
+\section{Image Formation and Sampling}
+\label{sec:formation}
+
+A real image is the true scene blurred by the PSF and then corrupted by noise.
+Writing the true distribution of light as $f(x,y)$, the PSF as $h(x,y)$, and the
+noise as $\eta(x,y)$, the recorded image is
+\begin{equation}
+  g(x,y) = (h * f)(x,y) + \eta(x,y),
+  \label{eq:convolution}
+\end{equation}
+where $*$ denotes convolution. Convolution by $h$ is exactly the blurring of
+\cref{sec:diffraction}: every point in $f$ is replaced by a copy of the PSF, as
+\cref{fig:formation} illustrates.
+
+A camera does not sample $g$ at infinitely fine points. Each pixel
+\emph{collects all the light that lands on its small square}. The expected number
+of counts in the pixel at column $j$, row $i$, for a single Gaussian emitter,
+is the Gaussian \emph{integrated} over that pixel~\cite{mortensen2010}:
+\begin{equation}
+  M_{ij} = b + N\,G_x(j;x_0,\sigma)\,G_y(i;y_0,\sigma),
+  \label{eq:pixmodel}
+\end{equation}
+\begin{equation}
+  G_x(j;x_0,\sigma) = \tfrac{1}{2}\left[
+    \erf\!\frac{j+\tfrac12-x_0}{\sqrt{2}\,\sigma}
+    - \erf\!\frac{j-\tfrac12-x_0}{\sqrt{2}\,\sigma}\right],
+  \label{eq:erf}
+\end{equation}
+with $G_y$ defined the same way along the rows. The factor $G_x$ is simply the
+fraction of the Gaussian's light that falls within the width of pixel $j$;
+$\erf$ is the error function. \Cref{eq:pixmodel,eq:erf} are the honest
+\emph{forward model}: they say what the camera \emph{should} record, on average,
+for an emitter at $(x_0,y_0)$. Localization, in \cref{sec:locating}, is the
+problem of running this model backwards.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{T3_image_formation}
+  \caption{Image formation as a convolution: the true object $f$ is blurred by
+  the point-spread function $h$ to give the recorded image $g = h * f$.}
+  \label{fig:formation}
+\end{figure}
+
+% ======================================================================
+\section{Photon Noise}
+\label{sec:noise}
+
+Light arrives as discrete photons at random times. If a pixel expects $M_{ij}$
+counts on average, the number it \emph{actually} records, $Z_{ij}$, fluctuates
+according to Poisson statistics~\cite{ober2004}:
+\begin{equation}
+  Z_{ij} \sim \mathrm{Poisson}(M_{ij}).
+  \label{eq:poisson}
+\end{equation}
+A defining property of the Poisson distribution is that its variance equals its
+mean. Real cameras add a second, electronic noise (\emph{read noise}) on top, so
+the total per-pixel variance is approximately~\cite{lelek2021}
+\begin{equation}
+  \Var[Z_{ij}] \approx M_{ij} + \left(\frac{\sigma_{\mathrm{read}}}{g}\right)^{2},
+  \label{eq:variance}
+\end{equation}
+where $\sigma_{\mathrm{read}}$ is the camera read noise and $g$ its gain.
+
+Photon noise is not a nuisance to be ignored; it is the fundamental reason
+localization has a \emph{precision limit} (\cref{sec:precision}). The more
+photons an emitter delivers, the smaller the relative fluctuations, and the more
+precisely its position can be pinned down. \Cref{fig:noise} shows how repeated
+measurements of the same emitter scatter because of this noise. In \app{}, the
+\texttt{Brightness} control sets the photon budget $N$ and \texttt{Read noise}
+sets $\sigma_{\mathrm{read}}$ --- so students can watch precision improve as
+they turn the brightness up.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{T5_poisson_noise}
+  \caption{Photon noise. The same emitter recorded several times gives different
+  noisy frames (top); the position estimated from many such frames scatters
+  about the true value (bottom).}
+  \label{fig:noise}
+\end{figure}
+
+% ======================================================================
+\section{Blinking and Single-Molecule Localization Logic}
+\label{sec:blinking}
+
+Now the central idea. Suppose a sample contains many emitters packed more
+closely than the diffraction limit. If they all glow at once, their PSFs overlap
+and \cref{eq:convolution} produces an unresolvable blur --- the diffraction
+limit wins (\cref{fig:blinking}a).
+
+But suppose instead that the emitters \emph{blink}: at any instant only a small,
+random subset is switched on, and those that are on happen to be far apart. Then
+each frame contains only a few \emph{isolated} spots (\cref{fig:blinking}b).
+Each isolated spot can be located precisely (\cref{sec:locating}). Over thousands
+of frames, different emitters take their turn, and the accumulated set of
+locations traces out the whole structure.
+
+This is single-molecule localization microscopy. STORM~\cite{rust2006} and
+PALM~\cite{betzig2006}, both introduced in 2006, use photoswitchable dyes and
+fluorescent proteins to make molecules blink; the same logic underlies the
+broader field of far-field optical nanoscopy~\cite{hell2007, lelek2021}. It is
+worth noting that the diffraction limit is never actually \emph{broken}: it is
+\emph{sidestepped}, by arranging that two unresolved emitters are never on at the
+same time. (Other super-resolution methods, such as STED~\cite{hell1994}, take a
+different route by physically sharpening the PSF.)
+
+\app{} reproduces this logic. The \emph{Virtual Experiment} builds exactly such
+blinking videos: you choose how many emitters may be on per frame and how far
+apart they must be. The companion macroscopic experiment uses blinking LEDs in
+place of fluorophores --- emitters that are large in physical size but produce
+data with the \emph{same statistical structure} as SMLM. Low-cost real SMLM
+instruments built in the same spirit have been described in the
+literature~\cite{danial2022, ma2017}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.90\linewidth]{T4_blinking}
+  \caption{Why blinking helps. (a) With all emitters on at once their
+  point-spread functions overlap into an unresolvable blur. (b) In a single
+  sparse frame only a few emitters are on, and each appears as an isolated spot
+  that can be located precisely.}
+  \label{fig:blinking}
+\end{figure}
+
+\begin{csnote}[Why separation matters]
+Localization works \emph{only} when spots are isolated. If two emitters are on
+together and their PSFs overlap, the methods in \cref{sec:locating} return one
+position somewhere between them --- a wrong answer, not two right ones. This is
+why the \emph{Virtual Experiment} lets you control \texttt{Max blinkers/frame}
+and \texttt{Blinker spacing}, and why crowded data reconstructs poorly.
+\end{csnote}
+
+% ======================================================================
+\section{Localizing an Emitter}
+\label{sec:locating}
+
+Given one isolated, blurred spot, where is its centre? This section gives the
+simple, transparent answer \app{} V1.1 uses, the precision that answer can
+reach, and --- as clearly marked background --- the statistically optimal
+answer.
+
+% --------------------------------------------------------------------
+\subsection{The centroid estimator used in V1.1}
+\label{sec:centroid}
+
+\app{} V1.1 localizes with the \emph{intensity-weighted centroid} --- the
+``balance point'' of the bright pixels~\cite{small2014}. First the frame is
+\emph{thresholded}: only pixels brighter than a high percentile of the frame
+(the top $0.5\%$) are kept, forming a mask $\mathcal{M}$ of candidate spot
+pixels. The centre estimate is then the brightness-weighted average of the
+masked pixel coordinates:
+\begin{equation}
+  \hat{x}_0 = \frac{\displaystyle\sum_{(i,j)\in\mathcal{M}} x_j\,Z_{ij}}
+                   {\displaystyle\sum_{(i,j)\in\mathcal{M}} Z_{ij}},
+  \qquad
+  \hat{y}_0 = \frac{\displaystyle\sum_{(i,j)\in\mathcal{M}} y_i\,Z_{ij}}
+                   {\displaystyle\sum_{(i,j)\in\mathcal{M}} Z_{ij}}.
+  \label{eq:centroid}
+\end{equation}
+The centroid has two virtues for teaching: it needs no iterative fitting, and
+every step --- threshold, mask, weighted average --- is inspectable
+(\cref{fig:centroid}). Crucially, the estimate $(\hat{x}_0,\hat{y}_0)$ is a
+\emph{continuous} number: it is not restricted to whole-pixel positions, so it
+can locate a spot to a fraction of a pixel even though the spot itself is
+several pixels wide.
+
+\begin{cswarn}[An honest note on the V1.1 centroid]
+\Cref{eq:centroid} uses the raw pixel values $Z_{ij}$ and does \emph{not}
+subtract a background estimate first. If the background $b$ is appreciable, the
+centroid is pulled slightly toward the brighter side of the spot --- a small
+bias. \app{} V1.1 limits this by keeping only the brightest pixels through the
+high threshold. Subtracting a local background before \cref{eq:centroid}, and
+fitting the full model of \cref{eq:pixmodel}, are improvements discussed in
+\cref{sec:extensions}.
+\end{cswarn}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.70\linewidth]{T7_centroid}
+  \caption{The V1.1 estimator: the frame is thresholded to a mask of the
+  brightest pixels (blue outline), and the intensity-weighted centroid
+  (\cref{eq:centroid}) of those pixels is taken as the emitter position.}
+  \label{fig:centroid}
+\end{figure}
+
+\subsection{Localization precision (background)}
+\label{sec:precision}
+
+Because of photon noise (\cref{sec:noise}), repeating the measurement gives a
+slightly different $\hat{x}_0$ each time. The spread of those estimates is the
+\emph{localization precision}, usually written as a standard error
+$\mathrm{SE}$. A widely used closed-form estimate is the Thompson--Larson--Webb
+formula~\cite{thompson2002}:
+\begin{equation}
+  \mathrm{SE} \approx \sqrt{\;\frac{\sigma^{2} + a^{2}/12}{N}
+                        \;+\; \frac{8\pi\,\sigma^{4}\,b^{2}}{a^{2}\,N^{2}}\;},
+  \label{eq:thompson}
+\end{equation}
+where $\sigma$ is the PSF width, $a$ the pixel size, $N$ the number of signal
+photons, and $b$ the background per pixel. The formula has two terms:
+\begin{itemize}
+  \item the \textbf{photon term} $(\sigma^2+a^2/12)/N$ dominates when the signal
+        is strong; it makes the precision improve as $1/\sqrt{N}$;
+  \item the \textbf{background term} $8\pi\sigma^4 b^2/(a^2N^2)$ dominates when
+        the signal is weak relative to the background.
+\end{itemize}
+\Cref{fig:precision} plots this behaviour.
+
+\begin{csnote}[Worked number: resolution is not precision]
+Take $\sigma = 1.5$~px and a bright spot, $N = 10^4$ photons, with negligible
+background. The photon term gives $\mathrm{SE} \approx
+\sqrt{(1.5^2)/10^4} \approx 0.015$~px --- about one part in a hundred of the
+blur width. With only $N = 100$ photons, $\mathrm{SE} \approx 0.15$~px. The
+emitter is blurred over several pixels, yet its \emph{centre} is known to a tiny
+fraction of a pixel. This is the heart of localization microscopy:
+\emph{resolution} (the blur width, \cref{eq:abbe}) and \emph{precision} (how
+well one centre is known, \cref{eq:thompson}) are different quantities, and the
+second can be far smaller than the first.
+\end{csnote}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.70\linewidth]{T6_precision_vs_photons}
+  \caption{Localization precision predicted by the Thompson formula
+  (\cref{eq:thompson}). Collecting more photons sharpens the position estimate;
+  in the photon-limited regime the precision improves as $1/\sqrt{N}$.}
+  \label{fig:precision}
+\end{figure}
+
+\subsection{The statistical ideal (background only): MLE and the Cram\'er--Rao bound}
+\label{sec:ideal}
+
+\begin{csideal}
+The centroid of \cref{eq:centroid} is simple but not statistically optimal. The
+\emph{best} estimate uses the full forward model of \cref{eq:pixmodel}. Because
+the data are Poisson-distributed (\cref{eq:poisson}), the optimal estimator
+\emph{maximizes the likelihood} of the observed counts, equivalently minimizing
+the negative log-likelihood
+\begin{equation}
+  L(\theta) = \sum_{i,j}\bigl[M_{ij}(\theta) - Z_{ij}\ln M_{ij}(\theta)\bigr],
+  \label{eq:nll}
+\end{equation}
+over the parameters $\theta = (x_0,y_0,N,b,\sigma)$. No estimator, however
+clever, can do better than the \emph{Cram\'er--Rao lower bound}~\cite{ober2004,
+mortensen2010}:
+\begin{equation}
+  \Var(\hat{\theta}) \ge F^{-1}(\theta),
+  \qquad
+  F_{mn} = \sum_{i,j}\frac{1}{M_{ij}}
+           \frac{\partial M_{ij}}{\partial\theta_m}
+           \frac{\partial M_{ij}}{\partial\theta_n},
+  \label{eq:crlb}
+\end{equation}
+where $F$ is the Fisher information matrix. Maximum-likelihood fitting attains
+this bound; a properly weighted least-squares fit comes very close. \app{} V1.1
+uses the simpler centroid \emph{on purpose} --- to keep every step visible ---
+and so sits a little above this ideal floor. It does \emph{not} implement
+\cref{eq:nll} or \cref{eq:crlb}; these are background theory and a possible
+extension (\cref{sec:extensions}). \Cref{eq:thompson} is, in effect, a
+convenient approximation to \cref{eq:crlb} for the centre coordinate.
+\end{csideal}
+
+% ======================================================================
+\section{Precision versus Accuracy}
+\label{sec:precacc}
+
+Two estimates can be tightly clustered yet systematically wrong. It is essential
+to keep two ideas separate~\cite{deschout2014}:
+\begin{description}[leftmargin=1.6em]
+  \item[Precision] is \emph{repeatability} --- how closely repeated measurements
+        of the same emitter agree with one another. It is the random scatter,
+        and it is what \cref{eq:thompson} estimates.
+  \item[Accuracy] is \emph{correctness} --- how close the estimates are to the
+        \emph{true} position. A constant offset (a bias) hurts accuracy without
+        hurting precision.
+\end{description}
+\Cref{fig:precacc} contrasts the two. The background bias of the V1.1 centroid
+(\cref{sec:centroid}) is exactly an accuracy problem: it can shift estimates
+without widening their scatter. This is why \app{}'s \emph{Virtual Experiment}
+saves the true positions in \file{truth.csv}: comparing reconstructed positions
+against the truth measures \emph{accuracy}, which precision alone cannot reveal.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.72\linewidth]{T8_precision_accuracy}
+  \caption{Precision versus accuracy, illustrated for four cases (panels
+  \textbf{a}--\textbf{d}). Each blue cluster is repeated localizations of one
+  emitter; the green cross is its true position. Precision is the tightness of
+  the scatter, accuracy is its closeness to the truth, and the two properties
+  are independent.}
+  \label{fig:precacc}
+\end{figure}
+
+% ======================================================================
+\section{From Localizations to a Reconstructed Image}
+\label{sec:rendering}
+
+A list of localized positions is not yet a picture. \app{} \emph{renders} it:
+each accepted localization is drawn as a small Gaussian ``splat,'' and all the
+splats are summed into the super-resolution image. In V1.1 every splat is drawn
+with the same fixed width (about $1.5$~px); the splat width is a display choice
+that makes the sparse points visible, not a measurement.
+
+A precise list of points is still not enough --- there must be \emph{enough}
+points. This is a sampling requirement, analogous to the Nyquist criterion: to
+portray a structure of a given fineness, localizations must be spaced no farther
+apart than about half that fineness~\cite{prakash2024, lelek2021}. Equivalently,
+\begin{equation}
+  (\text{structural resolution}) \;\gtrsim\; 2 \times
+  (\text{localization precision}).
+  \label{eq:nyquist}
+\end{equation}
+A sharp pencil is not enough to draw a fine figure; you also need enough dots,
+as \cref{fig:nyquist} shows. More blinking frames usually means more
+localizations and better sampling --- provided the detections stay reliable.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.86\linewidth]{T9_nyquist}
+  \caption{Sampling matters. Too few localizations leave the structure ambiguous
+  (left); enough localizations reveal it (right), even though each individual
+  localization is equally precise.}
+  \label{fig:nyquist}
+\end{figure}
+
+\begin{cswarn}[Reporting resolution honestly]
+The width of a rendered splat is \emph{not} the resolution of the result. Honest
+practice~\cite{prakash2024} is to report the localization precision
+(\cref{eq:thompson}) and the sampling density (\cref{eq:nyquist}) separately,
+rather than quoting a single number. \app{} is designed to make both visible
+rather than to print one headline figure.
+\end{cswarn}
+
+% ======================================================================
+\section{The \app{} V1.1 Pipeline}
+\label{sec:pipeline}
+
+Putting the pieces together, the list below states exactly what \app{} V1.1 does
+when you click \emph{Run Reconstruction} (\cref{fig:pipeline}). Each step is
+transparent and maps onto an equation above.
+
+\begin{enumerate}
+  \item \textbf{Load} the blinking video frame by frame (optionally cropped).
+  \item \textbf{Threshold} each frame: pixels brighter than a high intensity
+        percentile (the top $0.5\%$) form the candidate mask $\mathcal{M}$.
+  \item \textbf{Localize} with the intensity-weighted centroid of
+        \cref{eq:centroid} --- once per frame in \texttt{single} mode, or once
+        per separated bright region in \texttt{multiple} mode.
+  \item \textbf{Accumulate} the localizations from all frames.
+  \item \textbf{Render} each localization as a Gaussian splat
+        ($\sigma \approx 1.5$~px) and sum them into the super-resolution image.
+  \item \textbf{Average} the frames separately to form the diffraction-limited
+        \emph{raw mean} image.
+  \item \textbf{Compare} the raw mean and the reconstruction, including with the
+        linked profile viewer.
+\end{enumerate}
+
+The \emph{linked profile viewer} lets you compare the two images along any
+chosen line. Writing $I(x,y)$ for an image and $(x_0,y_0)$ for the chosen point,
+the viewer plots the row and column profiles
+\begin{equation}
+  I_x(x) = I(x,y_0), \qquad I_y(y) = I(x_0,y),
+  \label{eq:profile}
+\end{equation}
+for both the raw mean and the reconstruction. A narrow reconstruction peak
+beside a wide raw bump, on the same axes, is the visual proof that localization
+has beaten the blur --- as \cref{fig:rawvssr} demonstrates for a pair of emitter
+rows that the raw image cannot separate.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{T10_pipeline}
+  \caption{The \app{} V1.1 reconstruction pipeline.}
+  \label{fig:pipeline}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{T11_raw_vs_reconstruction}
+  \caption{A reconstruction produced by the V1.1 pipeline on a simulated
+  blinking video of two closely spaced emitter rows. The raw mean image blurs
+  the rows together; the reconstruction separates them, and the linked profile
+  shows one broad raw peak (red) versus two distinct reconstruction peaks
+  (blue).}
+  \label{fig:rawvssr}
+\end{figure}
+
+% ======================================================================
+\section{Scope, Assumptions, and Limitations}
+\label{sec:limitations}
+
+\app{} V1.1 is honest about being a teaching tool. The limitations below are not
+defects to hide --- each is a discussion point for students.
+
+\begin{cswarn}[What \app{} V1.1 does and does not do]
+\begin{itemize}
+  \item \textbf{Overlapping emitters cannot be separated.} If two spots merge,
+        the centroid of the merged region returns a single, wrong position
+        (\cref{sec:blinking}). Reliable reconstruction needs sparse, separated
+        blinking.
+  \item \textbf{The centroid gives a position but no uncertainty.} V1.1 does not
+        compute a per-localization standard error. \Cref{eq:thompson} tells you
+        what precision to \emph{expect}; the software does not report it spot by
+        spot.
+  \item \textbf{No background subtraction before the centroid.} As noted in
+        \cref{sec:centroid}, this can bias positions when the background is
+        significant.
+  \item \textbf{No model fitting.} V1.1 does not perform weighted-least-squares
+        or maximum-likelihood Gaussian fitting; it does not evaluate the
+        Cram\'er--Rao bound.
+  \item \textbf{The render width is fixed.} Every splat is drawn at the same
+        width; it shows where localizations are, not how precise each one is.
+  \item \textbf{No drift correction and no applied calibration.} Results are
+        reported in pixels; physical calibration is recorded but not applied.
+  \item \textbf{Noisy, saturated, or under-exposed video reconstructs poorly},
+        because thresholding (\cref{sec:noise}) can no longer separate signal
+        from noise.
+\end{itemize}
+These are deliberate simplifications that keep every step transparent. They are
+the natural starting points for the extensions below.
+\end{cswarn}
+
+% ======================================================================
+\section{Extensions and Further Reading}
+\label{sec:extensions}
+
+The V1.1 method can be improved in well-understood ways; these are standard in
+research SMLM and are natural project extensions. They are \emph{not} part of
+\app{} Studio V1.1.
+
+\begin{itemize}
+  \item \textbf{Background subtraction} before the centroid (for example an
+        annular median estimate) reduces the accuracy bias of
+        \cref{sec:centroid}.
+  \item \textbf{Gaussian fitting.} Replacing the centroid with a weighted
+        least-squares or maximum-likelihood fit of the model in
+        \cref{eq:pixmodel} approaches the Cram\'er--Rao bound
+        (\cref{eq:crlb}) and yields a per-localization
+        precision~\cite{mortensen2010, small2014}.
+  \item \textbf{Drift correction.} Slow stage drift can be measured by
+        cross-correlating frames and subtracted before
+        rendering~\cite{guizar2008}.
+  \item \textbf{Resolution metrics.} Fourier ring correlation gives an
+        image-based resolution estimate from two independent halves of the
+        data~\cite{prakash2024}.
+  \item \textbf{Reference software.} Research packages such as
+        ThunderSTORM~\cite{ovesny2014} implement the full pipeline and are
+        useful for comparison. An accessible introduction to SMLM data analysis
+        is given by Lee \emph{et al.}~\cite{lee2017}, and the mathematical
+        theory of recovering point sources is treated by Cand\`es and
+        Fern\'andez-Granda~\cite{candes2014}.
+\end{itemize}
+
+% ======================================================================
+\appendix
+
+\section{A Short Derivation: Why Precision Scales as
+         \texorpdfstring{$1/\sqrt{N}$}{1/sqrt(N)}}
+\label{sec:appderiv}
+
+\begin{csderiv}
+A localization is, in essence, an average of the positions at which the $N$
+signal photons arrived. Each photon lands at a random position drawn from the
+PSF, which has a spread of order $\sigma$. The standard error of the mean of $N$
+independent samples, each with spread $\sigma$, is
+\begin{equation*}
+  \mathrm{SE} \approx \frac{\sigma}{\sqrt{N}}.
+\end{equation*}
+This is the leading (photon-limited) term of the Thompson formula,
+\cref{eq:thompson}; the $a^2/12$ correction accounts for the finite pixel size,
+and the second term accounts for background photons that carry no position
+information. The lesson is simple and general: \emph{collect more photons and
+the position sharpens, in proportion to the square root of the count.}
+\end{csderiv}
+
+\section{Symbol Table}
+\label{sec:symbols}
+
+\begin{table}[htbp]
+\centering\small
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning}\\
+\midrule
+$\lambda$ & Wavelength of light\\
+$\mathrm{NA}$ & Numerical aperture of the imaging lens\\
+$d_{\mathrm{Abbe}},\,d_{\mathrm{Rayleigh}}$ & Diffraction-limited resolution
+  (\cref{eq:abbe,eq:rayleigh})\\
+$h,\,f,\,g$ & Point spread function, true scene, recorded image
+  (\cref{eq:convolution})\\
+$\sigma$ & Width of the (Gaussian) point spread function\\
+$(x_0,y_0)$ & True position of an emitter; $(\hat{x}_0,\hat{y}_0)$ its estimate\\
+$N$ & Number of signal photons from an emitter\\
+$b$ & Background level per pixel\\
+$a$ & Camera pixel size\\
+$M_{ij}$ & Expected counts in pixel $(i,j)$ (\cref{eq:pixmodel})\\
+$Z_{ij}$ & Recorded counts in pixel $(i,j)$\\
+$\sigma_{\mathrm{read}},\,g$ & Camera read noise and gain\\
+$\mathcal{M}$ & Set of thresholded (candidate spot) pixels\\
+$\mathrm{SE}$ & Localization precision (standard error)\\
+$L(\theta),\,F$ & Negative log-likelihood and Fisher information
+  (\cref{eq:nll,eq:crlb})\\
+\bottomrule
+\end{tabularx}
+\caption{Symbols used in these notes.}
+\label{tab:symbols}
+\end{table}
+
+% ======================================================================
+\begin{thebibliography}{99}
+\addcontentsline{toc}{section}{References}
+
+\bibitem{abbe1873} E.~Abbe, ``Beitr\"age zur Theorie des Mikroskops und der
+  mikroskopischen Wahrnehmung,'' \textit{Archiv f\"ur Mikroskopische Anatomie}
+  \textbf{9}, 413--468 (1873).
+
+\bibitem{rust2006} M.~J.~Rust, M.~Bates, and X.~Zhuang, ``Sub-diffraction-limit
+  imaging by stochastic optical reconstruction microscopy (STORM),''
+  \textit{Nature Methods} \textbf{3}, 793--795 (2006).
+
+\bibitem{betzig2006} E.~Betzig \textit{et al.}, ``Imaging intracellular
+  fluorescent proteins at nanometer resolution,'' \textit{Science} \textbf{313},
+  1642--1645 (2006).
+
+\bibitem{hell1994} S.~W.~Hell and J.~Wichmann, ``Breaking the diffraction
+  resolution limit by stimulated emission: stimulated-emission-depletion
+  fluorescence microscopy,'' \textit{Optics Letters} \textbf{19}, 780--782
+  (1994).
+
+\bibitem{hell2007} S.~W.~Hell, ``Far-field optical nanoscopy,''
+  \textit{Science} \textbf{316}, 1153--1158 (2007).
+
+\bibitem{thompson2002} R.~E.~Thompson, D.~R.~Larson, and W.~W.~Webb, ``Precise
+  nanometer localization analysis for individual fluorescent probes,''
+  \textit{Biophysical Journal} \textbf{82}, 2775--2783 (2002).
+
+\bibitem{mortensen2010} K.~I.~Mortensen, L.~S.~Churchman, J.~A.~Spudich, and
+  H.~Flyvbjerg, ``Optimized localization analysis for single-molecule tracking
+  and super-resolution microscopy,'' \textit{Nature Methods} \textbf{7},
+  377--381 (2010).
+
+\bibitem{ober2004} R.~J.~Ober, S.~Ram, and E.~S.~Ward, ``Localization accuracy
+  in single-molecule microscopy,'' \textit{Biophysical Journal} \textbf{86},
+  1185--1200 (2004).
+
+\bibitem{deschout2014} H.~Deschout \textit{et al.}, ``Precisely and accurately
+  localizing single emitters in fluorescence microscopy,'' \textit{Nature
+  Methods} \textbf{11}, 253--266 (2014).
+
+\bibitem{small2014} A.~Small and S.~Stahlheber, ``Fluorophore localization
+  algorithms for super-resolution microscopy,'' \textit{Nature Methods}
+  \textbf{11}, 267--279 (2014).
+
+\bibitem{ovesny2014} M.~Ovesn\'y, P.~K\v{r}\'i\v{z}ek, J.~Borkovec,
+  Z.~\v{S}vindrych, and G.~M.~Hagen, ``ThunderSTORM: a comprehensive ImageJ
+  plug-in for PALM and STORM data analysis and super-resolution imaging,''
+  \textit{Bioinformatics} \textbf{30}, 2389--2390 (2014).
+
+\bibitem{guizar2008} M.~Guizar-Sicairos, S.~T.~Thurman, and J.~R.~Fienup,
+  ``Efficient subpixel image registration algorithms,'' \textit{Optics Letters}
+  \textbf{33}, 156--158 (2008).
+
+\bibitem{schermelleh2019} L.~Schermelleh \textit{et al.}, ``Super-resolution
+  microscopy demystified,'' \textit{Nature Cell Biology} \textbf{21}, 72--84
+  (2019).
+
+\bibitem{lelek2021} M.~Lelek \textit{et al.}, ``Single-molecule localization
+  microscopy,'' \textit{Nature Reviews Methods Primers} \textbf{1}, 39 (2021).
+
+\bibitem{sigal2018} Y.~M.~Sigal, R.~Zhou, and X.~Zhuang, ``Visualizing and
+  discovering cellular structures with super-resolution microscopy,''
+  \textit{Science} \textbf{361}, 880--887 (2018).
+
+\bibitem{huang2010} B.~Huang, H.~Babcock, and X.~Zhuang, ``Breaking the
+  diffraction barrier: super-resolution imaging of cells,'' \textit{Cell}
+  \textbf{143}, 1047--1058 (2010).
+
+\bibitem{lee2017} S.~Lee, T.~Tsekouras, C.~Calderon, C.~Bustamante, and
+  S.~Press\'e, ``Unraveling the thousand word picture: an introduction to
+  super-resolution data analysis,'' \textit{Chemical Reviews} \textbf{117},
+  7276--7330 (2017).
+
+\bibitem{prakash2024} K.~Prakash \textit{et al.}, ``Resolution in
+  super-resolution microscopy --- definition, trade-offs and perspectives,''
+  \textit{Nature Methods} (2024), DOI:\,10.1038/s41592-024-02287-y.
+
+\bibitem{danial2022} J.~S.~H.~Danial \textit{et al.}, ``Constructing a
+  cost-efficient, high-throughput and high-quality single-molecule localization
+  microscope for super-resolution imaging,'' \textit{Nature Protocols}
+  \textbf{17}, 2570--2619 (2022).
+
+\bibitem{ma2017} H.~Ma \textit{et al.}, ``A simple and cost-effective setup for
+  super-resolution localization microscopy,'' \textit{Scientific Reports}
+  \textbf{7}, 1542 (2017).
+
+\bibitem{bechhoefer2015} J.~Bechhoefer, ``What is superresolution
+  microscopy?,'' \textit{American Journal of Physics} \textbf{83}, 22--29
+  (2015).
+
+\bibitem{candes2014} E.~J.~Cand\`es and C.~Fern\'andez-Granda, ``Towards a
+  mathematical theory of super-resolution,'' \textit{Communications on Pure and
+  Applied Mathematics} \textbf{67}, 906--956 (2014).
+
+\end{thebibliography}
+
+\end{document}
