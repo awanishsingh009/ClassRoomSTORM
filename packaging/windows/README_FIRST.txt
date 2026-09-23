@@ -1,4 +1,4 @@
-ClassRoomSTORM Studio V1.1 - Windows User Package
+ClassRoomSTORM Studio V1.2 - Windows User Package
 
 This folder contains everything needed to run ClassRoomSTORM Studio on Windows.
 
@@ -58,8 +58,8 @@ If setup fails
   your network is blocking or intercepting access to PyPI. Try an unrestricted
   network, ask your IT support how pip should reach PyPI, or use a package that
   includes an offline "wheels" folder.
-- If setup fails partway, it removes the incomplete environment automatically,
-  so the launcher will not start from a broken install. Fix the problem and run
+- If setup fails partway, it preserves the environment for a retry. The
+  launcher checks required imports before starting. Fix the problem and run
   setup_windows.bat again.
 - "Required Python packages are not installed" from the launcher means setup did
   not complete - run setup_windows.bat first.

@@ -1,0 +1,15 @@
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,graphicx,tikz}
+\usetikzlibrary{arrows.meta,calc,positioning}
+\definecolor{ink}{HTML}{20252C}
+\definecolor{blue}{HTML}{0072B2}
+\definecolor{raw}{HTML}{C1272D}
+\definecolor{green}{HTML}{39775A}
+\definecolor{orange}{HTML}{D55E00}
+\definecolor{muted}{HTML}{69717A}
+\tikzset{every node/.style={font=\fontsize{9}{10.8}\selectfont,text=ink,inner sep=1mm,outer sep=0pt,align=center},
+ title/.style={font=\fontsize{9}{10.8}\selectfont\bfseries},
+ detail/.style={font=\fontsize{8.5}{10.2}\selectfont,text=muted},
+ box/.style={draw=blue!65,fill=blue!3,line width=.65pt,rounded corners=1mm,minimum height=13mm},
+ flow/.style={draw=blue,line width=.8pt,shorten <=.5pt,shorten >=.5pt,-{Latex[length=2mm,width=1.3mm]}},
+ ref/.style={draw=green,dashed,line width=.7pt}}

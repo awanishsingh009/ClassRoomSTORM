@@ -18,12 +18,19 @@ Output folders are created next to this repository:
 from __future__ import annotations
 
 import hashlib
+import argparse
+import datetime
+import json
 import shutil
 import sys
+import tempfile
+import zipfile
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 OUT_ROOT = REPO.parent
+sys.path.insert(0, str(REPO / "classroomstorm_core"))
+from version import __version__
 
 TARGETS = {
     "windows": "ClassRoomSTORM_V1_User_windows",
@@ -76,12 +83,7 @@ def _ignore(dirpath: str, names: list[str]) -> set[str]:
     return drop
 
 
-def build(platform: str) -> Path:
-    name = TARGETS[platform]
-    dest = OUT_ROOT / name
-    print(f"\n=== building {name} ===")
-    if dest.exists():
-        shutil.rmtree(dest)
+def _populate(platform: str, dest: Path) -> Path:
     dest.mkdir(parents=True)
 
     for d in RUNTIME_DIRS:
@@ -114,9 +116,39 @@ def build(platform: str) -> Path:
         shutil.copy2(src, dest / f)
         print(f"  copied {f}")
 
-    # Belt and braces: drop any __pycache__ that slipped through.
-    for cache in dest.rglob("__pycache__"):
-        shutil.rmtree(cache, ignore_errors=True)
+    return dest
+
+
+def build(platform: str) -> Path:
+    """Validate a staged package before replacing a destination; retain every old file."""
+    root = OUT_ROOT.resolve()
+    root.mkdir(parents=True, exist_ok=True)
+    dest = root / TARGETS[platform]
+    if dest.is_symlink() or dest.resolve().parent != root:
+        raise ValueError("Package destination must be a direct, non-symlink child of the output directory")
+    with tempfile.TemporaryDirectory(prefix=".package-stage-", dir=root) as stage_dir:
+        staged = Path(stage_dir) / dest.name
+        _populate(platform, staged)
+        write_manifest(staged)
+        problems = validate(staged, platform)
+        if problems:
+            raise ValueError("Staged package failed validation: " + "; ".join(problems))
+        backup = None
+        if dest.exists():
+            stamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            archive = root / "archive" / "user_packages" / stamp
+            if not archive.resolve().is_relative_to(root):
+                raise ValueError("Package archive must stay inside the output directory")
+            archive.mkdir(parents=True)
+            backup = archive / dest.name
+            dest.rename(backup)
+            print(f"  Previous package and all user results preserved in {backup}")
+        try:
+            staged.rename(dest)
+        except OSError:
+            if backup is not None:
+                backup.rename(dest)
+            raise
     return dest
 
 
@@ -138,7 +170,7 @@ REQUIRED = [
 ]
 
 
-def validate(dest: Path) -> list[str]:
+def validate(dest: Path, platform: str | None = None) -> list[str]:
     problems: list[str] = []
 
     for p in dest.rglob("*"):
@@ -178,24 +210,62 @@ def validate(dest: Path) -> list[str]:
         except SyntaxError as exc:
             problems.append(f"syntax error in {rel}: {exc}")
 
+    manifest_path = dest / "PACKAGE_MANIFEST.json"
+    if not manifest_path.exists():
+        problems.append("missing SHA-256 package manifest")
+    else:
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if manifest.get("version") != __version__:
+                problems.append("manifest version differs from the current source")
+            recorded = manifest["sha256"]
+            actual = {p.relative_to(dest).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                      for p in dest.rglob("*") if p.is_file() and not p.name.startswith("PACKAGE_MANIFEST.")}
+            for rel in sorted(set(recorded) | set(actual)):
+                if recorded.get(rel) != actual.get(rel):
+                    problems.append(f"manifest mismatch: {rel}")
+        except (ValueError, KeyError, TypeError):
+            problems.append("invalid SHA-256 package manifest")
+    if platform is not None:
+        sources = {p.relative_to(REPO).as_posix(): p for folder in RUNTIME_DIRS
+                   for p in (REPO / folder).rglob("*") if p.is_file()
+                   and not any(part in EXCLUDE_DIRS for part in p.relative_to(REPO).parts)
+                   and not _excluded_file(p.name)}
+        sources.update({name: REPO / name for name in ROOT_FILES})
+        sources.update({f"docs/{name}": REPO / "docs" / name for name in DOC_PDFS})
+        sources.update({name: REPO / "packaging" / platform / name for name in PLATFORM_FILES[platform]})
+        for rel, source in sources.items():
+            target = dest / rel
+            if not target.is_file() or target.read_bytes() != source.read_bytes():
+                problems.append(f"package differs from current source: {rel}")
     return problems
 
 
 def write_manifest(dest: Path) -> int:
     rows = []
+    hashes = {}
     for p in sorted(dest.rglob("*")):
-        if p.is_file() and p.name != "PACKAGE_MANIFEST.txt":
+        if p.is_file() and not p.name.startswith("PACKAGE_MANIFEST."):
             rel = p.relative_to(dest).as_posix()
-            digest = hashlib.md5(p.read_bytes()).hexdigest()
+            digest = hashlib.sha256(p.read_bytes()).hexdigest()
+            hashes[rel] = digest
             rows.append(f"{digest}  {p.stat().st_size:>10d}  {rel}")
     (dest / "PACKAGE_MANIFEST.txt").write_text(
-        "ClassRoomSTORM V1 user package manifest\n"
+        f"ClassRoomSTORM {__version__} user package manifest (SHA-256)\n"
         f"files: {len(rows)}\n\n" + "\n".join(rows) + "\n", encoding="utf-8")
+    (dest / "PACKAGE_MANIFEST.json").write_text(json.dumps({"version": __version__, "sha256": hashes}, indent=2) + "\n", encoding="utf-8")
     return len(rows)
 
 
 def main(argv: list[str]) -> int:
-    validate_only = "--validate" in argv
+    global OUT_ROOT
+    parser = argparse.ArgumentParser(description="Build validated user packages and preserve previous packages with their results.")
+    parser.add_argument("--validate", action="store_true", help="Read-only manifest and source consistency check")
+    parser.add_argument("--output-dir", type=Path, default=OUT_ROOT)
+    parser.add_argument("--zip", action="store_true", help="Also create a versioned release ZIP after successful build")
+    args = parser.parse_args(argv)
+    OUT_ROOT = args.output_dir
+    validate_only = args.validate
     all_ok = True
     for platform in TARGETS:
         dest = OUT_ROOT / TARGETS[platform]
@@ -205,7 +275,7 @@ def main(argv: list[str]) -> int:
             print(f"  {TARGETS[platform]}: NOT FOUND")
             all_ok = False
             continue
-        problems = validate(dest)
+        problems = validate(dest, platform)
         if problems:
             all_ok = False
             print(f"  VALIDATION FAILED for {dest.name}:")
@@ -217,6 +287,21 @@ def main(argv: list[str]) -> int:
             print(f"  {dest.name}: VALID ({count} files)")
     print()
     print("ALL PACKAGES OK" if all_ok else "PROBLEMS FOUND -- see above")
+    if all_ok and args.zip:
+        release_dir = OUT_ROOT / "releases"
+        release_dir.mkdir(parents=True, exist_ok=True)
+        target = release_dir / f"ClassRoomSTORM_{__version__}.zip"
+        if target.exists():
+            raise FileExistsError(f"Release already exists; preserve it and choose another output directory: {target}")
+        with zipfile.ZipFile(target, "x", zipfile.ZIP_DEFLATED) as archive:
+            for name in TARGETS.values():
+                for path in sorted((OUT_ROOT / name).rglob("*")):
+                    if path.is_file():
+                        archive.write(path, path.relative_to(OUT_ROOT))
+        with zipfile.ZipFile(target) as archive:
+            if archive.testzip() is not None:
+                raise ValueError("Release ZIP failed its integrity check")
+        print(f"Release: {target}")
     return 0 if all_ok else 1
 
 

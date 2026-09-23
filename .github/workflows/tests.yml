@@ -1,5 +1,8 @@
 name: Tests
 
+permissions:
+  contents: read
+
 on:
   push:
   pull_request:
@@ -27,8 +30,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
-          python -m pip install pytest
+          python -m pip install -r requirements-dev.txt
       - name: Run tests
         run: python -m pytest -q
       - name: Check command-line entry points
@@ -36,3 +38,9 @@ jobs:
           python apps/ClassRoomSTORM_Studio.py --help
           python apps/ClassRoomSTORM_VirtualExperiment.py --help
           python apps/ClassRoomSTORM_Reconstruction.py --help
+      - name: Verify source export and user packages
+        if: runner.os == 'Linux'
+        run: |
+          python tools/prepare_github_release.py --output ../ci-release
+          python tools/prepare_github_release.py --validate-source ../ci-release/ClassRoomSTORM_Source
+          python tools/build_user_packages.py --validate --output-dir ../ci-release

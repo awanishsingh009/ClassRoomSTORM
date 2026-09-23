@@ -2,11 +2,11 @@
 
 ## Design Scope
 
-ClassRoomSTORM V1 is a teaching tool for stochastic blinking and localization-based reconstruction. It is intended for classroom laboratories and paper supplements, not as a replacement for specialized research localization packages.
+ClassRoomSTORM V1.2 is a teaching tool for stochastic blinking and localization-based reconstruction. It is intended for classroom laboratories and paper supplements, not as a replacement for specialized research localization packages.
 
 ## Pixel-First Reconstruction
 
-The reconstruction is performed in pixel units. A video may represent microscopy, LED-scale blinking, astronomical-style blinking, or simulation. Physical calibration can be added as metadata, but the algorithm does not require nm/pixel, mm/pixel, or km/pixel units.
+The reconstruction is performed in pixel units. A video may represent microscopy, LED-scale blinking, astronomical-style blinking, or simulation. Optional calibration is applied to exported coordinates. `x_px/y_px` are crop-local, `x_full_px/y_full_px` use the original frame origin, and `x_calibrated/y_calibrated` multiply full-frame coordinates by the supplied unit-per-pixel scale. Images and profiles retain pixel axes.
 
 ## Reconstruction Pipeline
 
@@ -42,3 +42,11 @@ ClassRoomSTORM writes `pipeline_report.md`, `pipeline_report.html`, DOT files, P
 - Very noisy, underexposed, or saturated videos may reconstruct poorly.
 - The current localization method is transparent and teachable, but simpler than advanced Gaussian-fitting research software.
 - GPU behavior is experimental and should be reported from `summary.json` rather than assumed.
+
+## Validation and display contracts
+
+- Optional `frame_median` background correction subtracts the cropped-frame median and clips negative weights to zero. It assumes sparse emitters; it is not an annular estimate or a camera-specific noise model. Raw means remain uncorrected.
+- Blank/constant frames produce no detections. Nonfinite, empty, non-grayscale or inconsistent input frames fail before export. Threshold quantiles must be in (0, 1].
+- Gaussian display kernels use fractional coordinates, fixed sigma 1.5 camera pixels, and unit sum per localization. Kernels clipped at the boundary are renormalized; display centroids near edges can consequently shift. The render is neither a photon-count map nor a resolution/uncertainty measurement.
+- Truth validation uses frame-aware maximum-cardinality one-to-one matching within a stated radius; candidates are visited in distance order. This maximizes match count, not globally minimal total assignment distance. Truth outside the processed crop or frame range is excluded. Unframed truth denotes a static pattern repeated in each evaluated frame. Undefined precision/recall are JSON null.
+- The input SHA-256, processing parameters, calibration, crop and backend are saved in summary.json. Existing result folders are not overwritten.

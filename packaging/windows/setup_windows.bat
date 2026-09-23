@@ -3,7 +3,7 @@ setlocal EnableExtensions
 cd /d "%~dp0"
 
 echo.
-echo ClassRoomSTORM Studio V1.1 - Windows setup
+echo ClassRoomSTORM Studio V1.2 - Windows setup
 echo =========================================
 echo.
 
@@ -26,18 +26,17 @@ if not exist ".venv\Scripts\python.exe" (
     )
 )
 
-echo Upgrading pip...
-".venv\Scripts\python.exe" -m pip install --upgrade pip
-if errorlevel 1 (
-    echo Failed to upgrade pip.
-    goto :fail
-)
-
 echo Installing ClassRoomSTORM requirements...
 if exist "wheels\*.whl" (
     echo Found a local wheels folder - installing offline.
     ".venv\Scripts\python.exe" -m pip install --no-index --find-links wheels -r requirements.txt
 ) else (
+    echo Upgrading pip...
+    ".venv\Scripts\python.exe" -m pip install --upgrade pip
+    if errorlevel 1 (
+        echo Failed to upgrade pip.
+        goto :fail
+    )
     ".venv\Scripts\python.exe" -m pip install -r requirements.txt
 )
 if errorlevel 1 (
@@ -56,9 +55,8 @@ echo.
 echo Setup did not finish.
 echo This can happen on restricted networks, proxy networks, or machines
 echo where Python cannot verify PyPI SSL certificates.
-echo Removing the incomplete local environment so the launcher will not
-echo accidentally use it.
-rmdir /s /q ".venv" >nul 2>nul
+echo The local environment has been kept so setup can be retried.
+echo The launcher checks required imports before starting.
 echo.
 echo See README_FIRST.txt for troubleshooting notes.
 pause

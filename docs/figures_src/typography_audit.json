@@ -1,0 +1,497 @@
+{
+  "contract": "9 pt main labels; 8.5 pt ticks, legends and notes; native-width inclusion",
+  "findings": [
+    {
+      "master": "T1_airy_gaussian",
+      "native_width_mm": 162.0,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 9,
+      "locations": [
+        {
+          "document": "Theory notes",
+          "figure": 2,
+          "page": 4,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 7
+        },
+        {
+          "document": "Manuscript",
+          "figure": 1,
+          "page": 3,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 7
+        }
+      ]
+    },
+    {
+      "master": "T2_rayleigh",
+      "native_width_mm": 162.0,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "Theory notes",
+          "figure": 1,
+          "page": 3,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 7
+        },
+        {
+          "document": "Manuscript",
+          "figure": 2,
+          "page": 3,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 7
+        }
+      ]
+    },
+    {
+      "master": "T3_image_formation",
+      "native_width_mm": 162.0,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "Theory notes",
+          "figure": 3,
+          "page": 5,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 7
+        },
+        {
+          "document": "Manuscript",
+          "figure": 3,
+          "page": 4,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 7
+        }
+      ]
+    },
+    {
+      "master": "T4_blinking",
+      "native_width_mm": 145.8,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "Theory notes",
+          "figure": 5,
+          "page": 6,
+          "inserted_width_mm": 145.8,
+          "matched_label_spans": 4
+        }
+      ]
+    },
+    {
+      "master": "T5_poisson_noise",
+      "native_width_mm": 162.0,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 1,
+      "locations": [
+        {
+          "document": "Theory notes",
+          "figure": 4,
+          "page": 6,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 3
+        },
+        {
+          "document": "Manuscript",
+          "figure": 9,
+          "page": 10,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 3
+        }
+      ]
+    },
+    {
+      "master": "T6_precision_vs_photons",
+      "native_width_mm": 113.4,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 13,
+      "locations": [
+        {
+          "document": "Theory notes",
+          "figure": 7,
+          "page": 9,
+          "inserted_width_mm": 113.39999999999999,
+          "matched_label_spans": 10
+        },
+        {
+          "document": "Manuscript",
+          "figure": 4,
+          "page": 5,
+          "inserted_width_mm": 113.4,
+          "matched_label_spans": 10
+        }
+      ]
+    },
+    {
+      "master": "T7_centroid",
+      "native_width_mm": 113.4,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "Theory notes",
+          "figure": 6,
+          "page": 8,
+          "inserted_width_mm": 113.39999999999999,
+          "matched_label_spans": 8
+        }
+      ]
+    },
+    {
+      "master": "T8_precision_accuracy",
+      "native_width_mm": 116.64,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "Theory notes",
+          "figure": 8,
+          "page": 10,
+          "inserted_width_mm": 116.64,
+          "matched_label_spans": 4
+        }
+      ]
+    },
+    {
+      "master": "T9_nyquist",
+      "native_width_mm": 139.32,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "Theory notes",
+          "figure": 9,
+          "page": 11,
+          "inserted_width_mm": 139.32,
+          "matched_label_spans": 9
+        }
+      ]
+    },
+    {
+      "master": "T11_raw_vs_reconstruction",
+      "native_width_mm": 162.0,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "Theory notes",
+          "figure": 11,
+          "page": 12,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 10
+        },
+        {
+          "document": "Manuscript",
+          "figure": 8,
+          "page": 9,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 10
+        }
+      ]
+    },
+    {
+      "master": "H8_linked_profile",
+      "native_width_mm": 162.0,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "User guide",
+          "figure": 8,
+          "page": 13,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 5
+        }
+      ]
+    },
+    {
+      "master": "H4_pattern_preview",
+      "native_width_mm": 129.6,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        9.0
+      ],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "User guide",
+          "figure": 4,
+          "page": 7,
+          "inserted_width_mm": 129.6,
+          "matched_label_spans": 3
+        }
+      ]
+    },
+    {
+      "master": "H5_blinking_frame",
+      "native_width_mm": 113.4,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "User guide",
+          "figure": 5,
+          "page": 8,
+          "inserted_width_mm": 113.39999999999999,
+          "matched_label_spans": 3
+        }
+      ]
+    },
+    {
+      "master": "P3_model_mismatch",
+      "native_width_mm": 162.0,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "Manuscript",
+          "figure": 6,
+          "page": 8,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 5
+        }
+      ]
+    },
+    {
+      "master": "P10_position_validation",
+      "native_width_mm": 162.0,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 2,
+      "locations": [
+        {
+          "document": "Manuscript",
+          "figure": 10,
+          "page": 10,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 8
+        }
+      ]
+    },
+    {
+      "master": "P11_rendering_sensitivity",
+      "native_width_mm": 162.0,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 3,
+      "locations": [
+        {
+          "document": "Manuscript",
+          "figure": 11,
+          "page": 11,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 5
+        }
+      ]
+    },
+    {
+      "master": "T10_pipeline",
+      "native_width_mm": 161.999,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 1,
+      "locations": [
+        {
+          "document": "Theory notes",
+          "figure": 10,
+          "page": 12,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 19
+        },
+        {
+          "document": "Manuscript",
+          "figure": 7,
+          "page": 9,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 19
+        }
+      ]
+    },
+    {
+      "master": "H1_concept_loop",
+      "native_width_mm": 161.999,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "User guide",
+          "figure": 1,
+          "page": 2,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 6
+        }
+      ]
+    },
+    {
+      "master": "H9_output_map",
+      "native_width_mm": 161.999,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        9.0
+      ],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "User guide",
+          "figure": 9,
+          "page": 13,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 17
+        }
+      ]
+    },
+    {
+      "master": "P6_apparatus",
+      "native_width_mm": 161.999,
+      "kind": "scientific vector master",
+      "normal_label_sizes_tex_pt": [
+        8.5,
+        9.0
+      ],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "Manuscript",
+          "figure": 5,
+          "page": 7,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 13
+        }
+      ]
+    },
+    {
+      "master": "H2_launcher_screenshot",
+      "native_width_mm": null,
+      "kind": "original raster UI screenshot; embedded UI text excluded",
+      "normal_label_sizes_tex_pt": [],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "User guide",
+          "figure": 2,
+          "page": 4,
+          "inserted_width_mm": 145.8,
+          "matched_label_spans": 0
+        }
+      ]
+    },
+    {
+      "master": "H3_quickstart_montage",
+      "native_width_mm": null,
+      "kind": "original raster UI screenshot; embedded UI text excluded",
+      "normal_label_sizes_tex_pt": [],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "User guide",
+          "figure": 3,
+          "page": 6,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 0
+        }
+      ]
+    },
+    {
+      "master": "H6_reconstruction_load_crop",
+      "native_width_mm": null,
+      "kind": "original raster UI screenshot; embedded UI text excluded",
+      "normal_label_sizes_tex_pt": [],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "User guide",
+          "figure": 6,
+          "page": 11,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 0
+        }
+      ]
+    },
+    {
+      "master": "H7_results_browser",
+      "native_width_mm": null,
+      "kind": "original raster UI screenshot; embedded UI text excluded",
+      "normal_label_sizes_tex_pt": [],
+      "mathematical_script_spans": 0,
+      "locations": [
+        {
+          "document": "User guide",
+          "figure": 7,
+          "page": 12,
+          "inserted_width_mm": 162.0,
+          "matched_label_spans": 0
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

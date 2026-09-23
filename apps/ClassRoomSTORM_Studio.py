@@ -1,5 +1,5 @@
 """
-ClassRoomSTORM Studio V1.1.
+ClassRoomSTORM Studio V1.2.
 
 Animated launch screen for choosing between the virtual experiment and
 reconstruction workflows.
@@ -20,8 +20,10 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT / "classroomstorm_core"))
+from version import APP_VERSION
+
 APP_NAME = "ClassRoomSTORM Studio"
-APP_VERSION = "V1.1"
 AUTHOR_CREDIT = "Developed by Dr. Awanish Pratap Singh"
 AUTHOR_AFFILIATION = "Institute of Biomedical Optics, University of Lübeck"
 STUDIO_TRANSITION_MS = 650
@@ -38,7 +40,7 @@ def studio_workflows() -> list[dict]:
         {
             "key": "reconstruction",
             "title": "SR Reconstruction",
-            "subtitle": "Reconstruct from recorded blinking video or stack",
+            "subtitle": "Reconstruct from recorded or simulated blinking video",
             "script": PROJECT_ROOT / "apps" / "ClassRoomSTORM_Reconstruction.py",
         },
     ]

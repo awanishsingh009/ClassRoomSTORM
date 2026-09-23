@@ -640,7 +640,7 @@ class ClassRoomSTORMCoreTests(unittest.TestCase):
         equations = app_module.equation_fragments()
         reader_links = app_module.studio_reader_links()
 
-        self.assertEqual(app_module.APP_VERSION, "V1.1")
+        self.assertEqual(app_module.APP_VERSION, "V1.2")
         self.assertEqual([item["key"] for item in workflows], ["virtual", "reconstruction"])
         self.assertTrue(workflows[0]["script"].name.endswith("ClassRoomSTORM_VirtualExperiment.py"))
         self.assertTrue(workflows[1]["script"].name.endswith("ClassRoomSTORM_Reconstruction.py"))

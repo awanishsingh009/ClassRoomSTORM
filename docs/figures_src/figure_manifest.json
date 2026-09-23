@@ -1,0 +1,150 @@
+[
+  {
+    "name": "T1_airy_gaussian",
+    "category": "theory",
+    "caption": "Ideal scalar, incoherent circular-pupil PSF. The image uses a labelled logarithmic colour scale to reveal rings; the profile is linear. The Gaussian matches the Airy FWHM only, not the side lobes or total energy.",
+    "scope": "analytical or synthetic teaching example"
+  },
+  {
+    "name": "T2_rayleigh",
+    "category": "theory",
+    "caption": "Two equal-brightness incoherent point sources through an ideal circular pupil. Each panel uses one normalization for the sum and both component PSFs, so the components add exactly. Rayleigh separation is 0.610 lambda/NA; it is a conventional two-point criterion, not a universal localization limit.",
+    "scope": "analytical or synthetic teaching example"
+  },
+  {
+    "name": "T3_image_formation",
+    "category": "theory",
+    "caption": "Linear shift-invariant, incoherent image formation: two equal point sources convolved with a normalized Gaussian PSF. Pixel integration is a subsequent detector operation. Panel brightness is independently scaled; the circles identify source positions.",
+    "scope": "analytical or synthetic teaching example"
+  },
+  {
+    "name": "T4_blinking",
+    "category": "theory",
+    "caption": "Temporal sparsity: the same emitter arrangement with all 40 sources active or five well-separated sources active. These are noise-free expectations with one shared intensity scale; sparse activation enables individual localization.",
+    "scope": "analytical or synthetic teaching example"
+  },
+  {
+    "name": "T5_poisson_noise",
+    "category": "theory",
+    "caption": "Pixel-integrated Gaussian signal with 2000 expected photons, sigma=2.3 pixels, and Poisson background mean 3 counts/pixel. The V1.2 single-emitter centroid uses q=0.98 and frame-median subtraction. The histogram measures repeated-estimate spread and bias, not per-event uncertainty.",
+    "scope": "analytical or synthetic teaching example"
+  },
+  {
+    "name": "T6_precision_vs_photons",
+    "category": "theory",
+    "caption": "Thompson-Larson-Webb reference approximation, not uncertainty reported by the centroid software. PSF sigma=1.5 camera pixels, pixel pitch a=1 in the same length units. b_rms is background RMS noise, not mean background. Position s.d. scales as N^(-1/2) in the signal-limited regime and N^(-1) in the background-limited regime.",
+    "scope": "analytical or synthetic teaching example"
+  },
+  {
+    "name": "T7_centroid",
+    "category": "theory",
+    "caption": "A synthetic pixel-integrated Gaussian spot with Poisson noise. The orange contour marks the q=0.98 threshold mask; the plus and circle distinguish truth and the application centroid. Subpixel coordinates do not imply zero error. This example uses no background correction.",
+    "scope": "analytical or synthetic teaching example"
+  },
+  {
+    "name": "T8_precision_accuracy",
+    "category": "theory",
+    "caption": "Illustrative samples separate repeatability (spread) from systematic offset (bias). The mean is explicitly controlled. Accuracy depends on both bias and random error; small spread alone is not accuracy.",
+    "scope": "analytical or synthetic teaching example"
+  },
+  {
+    "name": "T9_nyquist",
+    "category": "theory",
+    "caption": "Synthetic ring sampled at 16 or 320 independently drawn positions with the same radial noise. Sampling spacing and localization precision are different quantities. No universal resolution threshold or adequate sample count is inferred from this illustration.",
+    "scope": "analytical or synthetic teaching example"
+  },
+  {
+    "name": "T11_raw_vs_reconstruction",
+    "category": "theory",
+    "caption": "Actual V1.2 centroid reconstruction of 600 synthetic pixel-integrated Poisson frames. Exactly one of two sources is active per frame; separation 8 pixels and optical Gaussian sigma 6 pixels. q=0.995 with frame-median subtraction. The mean image subtracts the known simulated background for display. Both images and column-sum profiles are independently peak-normalized. Green guides and orange crosses mark truth. Gaussian rendering sigma=1.5 pixels does not measure resolution. Source data and run parameters accompany the figure.",
+    "scope": "synthetic input processed by maintained V1.2 reconstruct_frames"
+  },
+  {
+    "name": "H8_linked_profile",
+    "category": "help",
+    "caption": "Linked row profiles from the recorded two-source synthetic reconstruction. Dashed horizontal lines identify camera row 40; each profile is peak-normalized. A profile describes the displayed images and is not an independent resolution measurement.",
+    "scope": "recorded two-source synthetic application run"
+  },
+  {
+    "name": "H4_pattern_preview",
+    "category": "help",
+    "caption": "A schematic source pattern and one illustrative set of source positions. The mask defines eligible regions; it is not a measured optical image or a guarantee of one emitter per bright connected region.",
+    "scope": "analytical or synthetic teaching example"
+  },
+  {
+    "name": "H5_blinking_frame",
+    "category": "help",
+    "caption": "One raw synthetic frame from the recorded two-source run. Only one emitter is active in this frame; signal and background are Poisson-distributed.",
+    "scope": "analytical or synthetic teaching example"
+  },
+  {
+    "name": "P3_model_mismatch",
+    "category": "manuscript",
+    "caption": "Analytical two-Gaussian signals fitted by a constrained symmetric single Gaussian. Residuals reveal model mismatch as separation increases. This illustrative fit is not an implemented ClassRoomSTORM fitting stage, and no automatic acceptance criterion is claimed.",
+    "scope": "analytical or synthetic teaching example"
+  },
+  {
+    "name": "P10_position_validation",
+    "category": "manuscript",
+    "caption": "Position estimates from the recorded 600-frame two-source synthetic run. Source membership comes from recorded simulation truth, not an inferred clustering result. Vertical dotted lines mark true x coordinates. The error scatter and two-dimensional RMSE assess position accuracy independently of the rendering kernel.",
+    "scope": "recorded synthetic application run with known truth"
+  },
+  {
+    "name": "P11_rendering_sensitivity",
+    "category": "manuscript",
+    "caption": "The same localization list rendered by the application with Gaussian sigma 0.75, 1.5 or 3 camera pixels. Column-sum profiles are independently peak-normalized. Narrower display kernels change apparent peak widths and valley depths without improving the underlying position estimates or establishing structural resolution.",
+    "scope": "controlled rendering variation on one recorded synthetic localization list"
+  },
+  {
+    "name": "T10_pipeline",
+    "category": "theory",
+    "caption": "The current centroid pipeline, with a separate raw-mean branch. Rendering width is fixed and is not an uncertainty estimate.",
+    "scope": "native TikZ explanatory schematic"
+  },
+  {
+    "name": "H1_concept_loop",
+    "category": "help",
+    "caption": "Conceptual progression from sparse blinking through position estimation to comparison with data or known truth.",
+    "scope": "native TikZ explanatory schematic"
+  },
+  {
+    "name": "H9_output_map",
+    "category": "help",
+    "caption": "Output roles for the virtual experiment and reconstruction workflows.",
+    "scope": "native TikZ explanatory schematic"
+  },
+  {
+    "name": "P6_apparatus",
+    "category": "manuscript",
+    "caption": "Supplied apparatus CAD image and a conceptual optical/data pathway. Dimensions and effective blur must be calibrated; no raw-camera inset is claimed.",
+    "scope": "native TikZ explanatory schematic"
+  },
+  {
+    "name": "H2_launcher_screenshot",
+    "category": "help",
+    "caption": "Current Studio launcher, captured from the application.",
+    "scope": "actual application screenshot",
+    "format": "png"
+  },
+  {
+    "name": "H3_quickstart_montage",
+    "category": "help",
+    "caption": "Current virtual-experiment and reconstruction windows, captured from the application.",
+    "scope": "actual application screenshot",
+    "format": "png"
+  },
+  {
+    "name": "H6_reconstruction_load_crop",
+    "category": "help",
+    "caption": "Current reconstruction load/crop interface before a video is loaded.",
+    "scope": "actual application screenshot",
+    "format": "png"
+  },
+  {
+    "name": "H7_results_browser",
+    "category": "help",
+    "caption": "Current results browser before a reconstruction is run. This is a UI screenshot, not experimental evidence.",
+    "scope": "actual application screenshot",
+    "format": "png"
+  }
+]

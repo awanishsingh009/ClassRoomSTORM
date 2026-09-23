@@ -1,4 +1,6 @@
-# ClassRoomSTORM Studio V1.1
+# ClassRoomSTORM Studio V1.2
+
+Current patch version: **1.2.1**. The application and manuals use the V1.2 series name.
 
 [![Tests](https://github.com/awanishsingh009/ClassRoomSTORM/actions/workflows/tests.yml/badge.svg)](https://github.com/awanishsingh009/ClassRoomSTORM/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -17,7 +19,7 @@ ClassRoomSTORM is a cross-platform Python teaching toolkit for stochastic blinki
 
 ## Scope
 
-ClassRoomSTORM is deliberately transparent educational software. The V1.1 reconstruction uses percentile thresholding, connected components for multiple emitters, and intensity-weighted centroid localization. It does not replace research-grade SMLM packages with Gaussian/MLE fitting, drift correction, uncertainty estimation, or camera-specific calibration.
+ClassRoomSTORM is deliberately transparent educational software. The V1.2 reconstruction uses percentile thresholding, connected components for multiple emitters, and intensity-weighted centroid localization. It does not replace research-grade SMLM packages with Gaussian/MLE fitting, drift correction, uncertainty estimation, or camera-specific calibration.
 
 ## Quick Start
 
@@ -25,12 +27,11 @@ Python 3.11 is recommended. Python 3.10-3.13 is supported.
 
 ```bash
 python -m venv .venv
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python apps/ClassRoomSTORM_Studio.py
+.venv/Scripts/python -m pip install -r requirements.txt  # Windows
+.venv/Scripts/python apps/ClassRoomSTORM_Studio.py
 ```
 
-On Windows, activate the environment with `.venv\Scripts\activate`. On macOS or Linux, use `source .venv/bin/activate`.
+On macOS or Linux, use `.venv/bin/python` in place of `.venv/Scripts/python`. The commands above explicitly use the project environment; activation is optional.
 
 The `packaging/windows` and `packaging/macos` folders contain setup and launch scripts used to build the user packages.
 
@@ -68,6 +69,7 @@ Reconstructions produce `localizations.csv`, `summary.json`, NumPy arrays, rende
 ## Tests
 
 ```bash
+python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
@@ -81,3 +83,17 @@ Institute of Biomedical Optics, University of Lübeck
 ## Citation And License
 
 Citation metadata is provided in [`CITATION.cff`](CITATION.cff). ClassRoomSTORM is released under the [MIT License](LICENSE).
+
+## V1.2 quantitative output and release workflow
+
+Calibration: add `--pixel-size 0.25 --unit mm` to export physical coordinates. Pixel columns are retained; physical coordinates use the original frame origin. Images remain in pixel units. `--background-mode frame_median` optionally subtracts the cropped-frame median.
+
+Truth comparison uses one-to-one same-frame matching with `--truth-radius-px 2`, and reports precision, recall, F1 and matched errors only within the processed crop/frame range. Rendering preserves fractional positions but does not measure optical resolution. Choose an empty output folder; existing results are protected.
+
+Build manuals with `python tools/build_docs.py`. Refresh adjacent Windows and macOS packages with `python tools/build_user_packages.py`; previous packages and their results move to `../archive/user_packages/`. Verify shipped hashes and equality to the current source with `python tools/build_user_packages.py --validate`.
+
+For a future GitHub update, follow [the release instructions](docs/RELEASE.md). `python tools/prepare_github_release.py --output ../releases/ClassRoomSTORM-1.2.1-ready` creates a clean source folder and separate source/Windows/macOS ZIPs with checksums. It does not commit or publish anything.
+
+## Revised scientific figures
+
+The physics-reviewed figure sources, fixed-seed data and build instructions are in [docs/figures_src/README.md](docs/figures_src/README.md). Review all scientific masters in [Scientific_Figure_Review.pdf](docs/Scientific_Figure_Review.pdf). The manuals and manuscript use these shared masters; historical artwork is preserved.

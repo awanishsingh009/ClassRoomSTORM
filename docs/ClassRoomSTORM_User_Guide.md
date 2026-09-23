@@ -163,3 +163,7 @@ Learning goals:
 ## Troubleshooting
 
 If video loading fails, check that the file is an MP4, AVI, or MOV readable by OpenCV. If no localizations are found, inspect the frame, try multiple mode, and check brightness/noise. If reconstruction is slow, reduce max frames for a test run or use Auto CPU. For truth comparison, make sure `truth.csv` belongs to the same virtual experiment folder and was not used before reconstruction.
+
+## V1.2 controls
+
+Manual calibration applies the entered unit-per-pixel scale to original-frame CSV coordinates. Frame-median background subtraction and threshold quantile are available on Preprocess. Blank frames are skipped automatically. Truth match radius controls the one-to-one comparison; summary.json reports precision, recall, F1 and matched errors. The window remains responsive during reconstruction. Wait for export to finish and use a new empty output folder for each run.

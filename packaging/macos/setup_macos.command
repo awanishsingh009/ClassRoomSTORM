@@ -6,9 +6,8 @@ fail() {
     echo "Setup did not finish."
     echo "This can happen on restricted networks, proxy networks, or machines"
     echo "where Python cannot verify PyPI SSL certificates."
-    echo "Removing the incomplete local environment so the launcher will not"
-    echo "accidentally use it."
-    rm -rf .venv
+    echo "The local environment has been kept so setup can be retried."
+    echo "The launcher checks required imports before starting."
     echo
     echo "See README_FIRST.txt for troubleshooting notes."
     read -p "Press Return to close."
@@ -16,7 +15,7 @@ fail() {
 }
 
 echo
-echo "ClassRoomSTORM Studio V1.1 - macOS setup"
+echo "ClassRoomSTORM Studio V1.2 - macOS setup"
 echo "========================================"
 echo
 
@@ -32,14 +31,13 @@ if [ ! -x ".venv/bin/python" ]; then
     python3 -m venv .venv || fail
 fi
 
-echo "Upgrading pip..."
-".venv/bin/python" -m pip install --upgrade pip || fail
-
 echo "Installing ClassRoomSTORM requirements..."
 if ls wheels/*.whl >/dev/null 2>&1; then
     echo "Found a local wheels folder - installing offline."
     ".venv/bin/python" -m pip install --no-index --find-links wheels -r requirements.txt || fail
 else
+    echo "Upgrading pip..."
+    ".venv/bin/python" -m pip install --upgrade pip || fail
     ".venv/bin/python" -m pip install -r requirements.txt || fail
 fi
 

@@ -14,6 +14,11 @@ def _try_matplotlib():
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
+        try:
+            from .figure_style import configure
+        except ImportError:
+            from figure_style import configure
+        configure(plt)
         return plt
     except Exception:
         return None
@@ -21,7 +26,10 @@ def _try_matplotlib():
 
 def save_grayscale_png(path: str | Path, image: np.ndarray) -> Path:
     from PIL import Image
-    from simulation import normalize_to_uint8
+    try:
+        from .simulation import normalize_to_uint8
+    except ImportError:
+        from simulation import normalize_to_uint8
 
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -36,11 +44,11 @@ def save_superres_png(path: str | Path, image: np.ndarray, title: str = "Super-R
     if plt is not None:
         fig, ax = plt.subplots(figsize=(7.2, 4.6), facecolor="white")
         im = ax.imshow(image, cmap="viridis", interpolation="nearest")
-        ax.set_title(title, fontsize=18, pad=10)
+        ax.set_title(title, fontsize=12, pad=10)
         ax.axis("off")
-        fig.colorbar(im, ax=ax, fraction=0.046, pad=0.03)
+        fig.colorbar(im, ax=ax, fraction=0.046, pad=0.03, label="Kernel weight per camera pixel")
         fig.tight_layout()
-        fig.savefig(target, dpi=180)
+        fig.savefig(target, dpi=300)
         plt.close(fig)
         return target
     return save_grayscale_png(target, image)
@@ -53,18 +61,22 @@ def save_side_by_side(path: str | Path, left: np.ndarray, right: np.ndarray, lef
     if plt is not None:
         fig, axes = plt.subplots(1, 2, figsize=(12.8, 4.8), facecolor="white")
         axes[0].imshow(left, cmap="gray", interpolation="nearest")
-        axes[0].set_title(left_title, fontsize=24, pad=12)
+        axes[0].set_title(left_title, fontsize=13, pad=12)
         axes[0].axis("off")
-        axes[1].imshow(right, cmap="viridis", interpolation="nearest")
-        axes[1].set_title(right_title, fontsize=24, pad=12)
+        axes[1].imshow(right, cmap="gray", interpolation="nearest")
+        axes[1].set_title(right_title, fontsize=13, pad=12)
         axes[1].axis("off")
-        fig.tight_layout(w_pad=3.0)
-        fig.savefig(target, dpi=180)
+        fig.text(.5, .02, "Same field of view; each image uses its own intensity scale. Render width is a display choice.", ha="center", fontsize=9)
+        fig.tight_layout(w_pad=3.0, rect=(0,.06,1,1))
+        fig.savefig(target, dpi=300)
         plt.close(fig)
         return target
 
     from PIL import Image, ImageDraw
-    from simulation import normalize_to_uint8
+    try:
+        from .simulation import normalize_to_uint8
+    except ImportError:
+        from simulation import normalize_to_uint8
 
     left_img = Image.fromarray(normalize_to_uint8(left)).convert("RGB")
     right_img = Image.fromarray(normalize_to_uint8(right)).convert("RGB")
@@ -94,13 +106,16 @@ def save_counts_per_frame(path: str | Path, localizations: Sequence[dict]) -> Pa
     plt = _try_matplotlib()
     if plt is not None:
         fig, ax = plt.subplots(figsize=(7, 3.5), facecolor="white")
-        ax.plot(np.arange(len(counts)), counts, color="#0B7285", linewidth=1.5)
+        ax.plot(np.arange(len(counts)), counts, color="#0072B2", linewidth=1.5)
         ax.set_title("Localizations per Frame")
         ax.set_xlabel("Frame")
         ax.set_ylabel("Count")
+        from matplotlib.ticker import MaxNLocator
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.set_ylim(0, max(1, int(counts.max()) if len(counts) else 1) * 1.15)
         ax.grid(True, alpha=0.25)
         fig.tight_layout()
-        fig.savefig(target, dpi=180)
+        fig.savefig(target, dpi=300)
         plt.close(fig)
         return target
     from PIL import Image, ImageDraw
@@ -128,19 +143,19 @@ def save_intensity_histogram(path: str | Path, localizations: Sequence[dict]) ->
     plt = _try_matplotlib()
     if plt is not None:
         fig, ax = plt.subplots(figsize=(6, 4), facecolor="white")
-        ax.hist(vals, bins=min(40, max(5, int(np.sqrt(max(1, len(vals)))))), color="#364FC7", alpha=0.85)
-        ax.set_title("Photon / Intensity Histogram")
-        ax.set_xlabel("Intensity (a.u.)")
+        ax.hist(vals, bins=min(40, max(5, int(np.sqrt(max(1, len(vals)))))), color="#0072B2", alpha=0.85)
+        ax.set_title("Selected-pixel Intensity Histogram")
+        ax.set_xlabel("Summed selected-pixel intensity (camera units)")
         ax.set_ylabel("Count")
         ax.grid(True, axis="y", alpha=0.25)
         fig.tight_layout()
-        fig.savefig(target, dpi=180)
+        fig.savefig(target, dpi=300)
         plt.close(fig)
         return target
     from PIL import Image, ImageDraw
     canvas = Image.new("RGB", (520, 360), "white")
     draw = ImageDraw.Draw(canvas)
-    draw.text((18, 10), "Photon / Intensity Histogram", fill="black")
+    draw.text((18, 10), "Selected-pixel Intensity Histogram", fill="black")
     if vals:
         hist, _ = np.histogram(vals, bins=min(30, max(5, int(np.sqrt(len(vals))))))
         x0, y0, w, h = 40, 60, 430, 240
@@ -154,7 +169,10 @@ def save_intensity_histogram(path: str | Path, localizations: Sequence[dict]) ->
 
 
 def save_density_map(path: str | Path, localizations: Sequence[dict], shape: tuple[int, int]) -> Path:
-    from reconstruction import render_localization_image
+    try:
+        from .reconstruction import render_localization_image
+    except ImportError:
+        from reconstruction import render_localization_image
 
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -163,11 +181,11 @@ def save_density_map(path: str | Path, localizations: Sequence[dict], shape: tup
     if plt is not None:
         fig, ax = plt.subplots(figsize=(7.2, 4.6), facecolor="white")
         im = ax.imshow(density, cmap="viridis", interpolation="nearest")
-        ax.set_title("Localization Density Map", fontsize=16)
+        ax.set_title("Rendered density (display sigma = 3 px)", fontsize=12)
         ax.axis("off")
-        fig.colorbar(im, ax=ax, fraction=0.046, pad=0.03)
+        fig.colorbar(im, ax=ax, fraction=0.046, pad=0.03, label="Kernel weight per camera pixel")
         fig.tight_layout()
-        fig.savefig(target, dpi=180)
+        fig.savefig(target, dpi=300)
         plt.close(fig)
         return target
     return save_grayscale_png(target, density)
@@ -182,16 +200,19 @@ def save_raw_localization_overlay(path: str | Path, raw_image: np.ndarray, local
     if plt is not None:
         fig, ax = plt.subplots(figsize=(7.2, 4.6), facecolor="white")
         ax.imshow(raw_image, cmap="gray", interpolation="nearest")
-        ax.scatter(xs, ys, s=8, c="#22D3EE", alpha=0.8, linewidths=0)
-        ax.set_title("Raw Mean with Localizations", fontsize=16)
+        ax.scatter(xs, ys, s=8, c="#D55E00", alpha=0.8, linewidths=0)
+        ax.set_title("Raw Mean with Localizations", fontsize=12)
         ax.axis("off")
         fig.tight_layout()
-        fig.savefig(target, dpi=180)
+        fig.savefig(target, dpi=300)
         plt.close(fig)
         return target
 
     from PIL import Image, ImageDraw
-    from simulation import normalize_to_uint8
+    try:
+        from .simulation import normalize_to_uint8
+    except ImportError:
+        from simulation import normalize_to_uint8
 
     canvas = Image.fromarray(normalize_to_uint8(raw_image)).convert("RGB")
     draw = ImageDraw.Draw(canvas)
@@ -247,7 +268,10 @@ def save_cumulative_reconstruction_panel(
     manual_checkpoints: Sequence[int] | None = None,
     total_frames: int | None = None,
 ) -> Path:
-    from reconstruction import render_localization_image
+    try:
+        from .reconstruction import render_localization_image
+    except ImportError:
+        from reconstruction import render_localization_image
 
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -261,18 +285,22 @@ def save_cumulative_reconstruction_panel(
         vmax = max(float(np.max(img)) for img in images) if images else 1.0
         for ax, img, label in zip(axes_flat, images, labels):
             ax.imshow(img, cmap="viridis", vmin=0, vmax=max(vmax, 1e-9), interpolation="nearest")
-            ax.set_title(label, fontsize=14)
+            ax.set_title(label, fontsize=10)
             ax.axis("off")
-        fig.suptitle("Cumulative Reconstruction", fontsize=18)
+        fig.suptitle("Cumulative reconstruction: shared scale, display sigma = 1.5 px", fontsize=12)
         fig.tight_layout(rect=(0, 0, 1, 0.95))
-        fig.savefig(target, dpi=180)
+        fig.savefig(target, dpi=300)
         plt.close(fig)
         return target
 
     from PIL import Image, ImageDraw
-    from simulation import normalize_to_uint8
+    try:
+        from .simulation import normalize_to_uint8
+    except ImportError:
+        from simulation import normalize_to_uint8
 
-    panels = [Image.fromarray(normalize_to_uint8(img)).convert("RGB") for img in images]
+    vmax = max((float(np.max(img)) for img in images), default=1.0)
+    panels = [Image.fromarray(np.clip(img / max(vmax, 1e-9) * 255, 0, 255).astype(np.uint8)).convert("RGB") for img in images]
     if not panels:
         panels = [Image.new("RGB", (shape[1], shape[0]), "black")]
         labels = ["No localizations"]
@@ -289,7 +317,7 @@ def save_cumulative_reconstruction_panel(
         row = idx // 2
         x0 = col * (panel_w + gap)
         y0 = row * (panel_h + title_h + gap)
-        draw.text((x0 + 4, 6), label, fill="black")
+        draw.text((x0 + 4, y0 + 6), label, fill="black")
         canvas.paste(panel, (x0, y0 + title_h))
     canvas.save(target)
     return target
@@ -305,21 +333,25 @@ def save_line_profile(path: str | Path, raw_image: np.ndarray, reconstruction: n
     recon_profile = recon[min(y, recon.shape[0] - 1), :]
     if raw_profile.max() > raw_profile.min():
         raw_profile = (raw_profile - raw_profile.min()) / (raw_profile.max() - raw_profile.min())
+    else:
+        raw_profile = np.zeros_like(raw_profile)
     if recon_profile.max() > recon_profile.min():
         recon_profile = (recon_profile - recon_profile.min()) / (recon_profile.max() - recon_profile.min())
+    else:
+        recon_profile = np.zeros_like(recon_profile)
     x = np.arange(len(raw_profile))
     plt = _try_matplotlib()
     if plt is not None:
         fig, ax = plt.subplots(figsize=(7, 3.8), facecolor="white")
-        ax.plot(x, raw_profile, label="Raw mean", color="#495057", linewidth=1.6)
-        ax.plot(x, recon_profile, label="Reconstruction", color="#0B7285", linewidth=1.6)
-        ax.set_title("Central Line Profile")
+        ax.plot(x, raw_profile, label="Raw mean", color="#c1272d", linewidth=1.6, linestyle="--")
+        ax.plot(x, recon_profile, label="Reconstruction", color="#0072B2", linewidth=1.6)
+        ax.set_title(f"Camera row {y}: displayed-image comparison")
         ax.set_xlabel("x (px)")
-        ax.set_ylabel("Normalized intensity")
+        ax.set_ylabel("Independently min-max normalized signal")
         ax.grid(True, alpha=0.25)
         ax.legend(frameon=False)
         fig.tight_layout()
-        fig.savefig(target, dpi=180)
+        fig.savefig(target, dpi=300)
         plt.close(fig)
         return target
 
@@ -355,7 +387,7 @@ def save_localization_scatter(path: str | Path, localizations: Sequence[dict]) -
         ax.set_aspect("equal", adjustable="box")
         ax.invert_yaxis()
         fig.tight_layout()
-        fig.savefig(target, dpi=160)
+        fig.savefig(target, dpi=300)
         plt.close(fig)
         return target
 

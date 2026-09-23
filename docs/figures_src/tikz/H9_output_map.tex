@@ -1,0 +1,13 @@
+\documentclass[border=0pt]{standalone}
+\input{ScientificFigureStyle.tex}
+\begin{document}
+\begin{tikzpicture}[x=1mm,y=1mm]
+\path[use as bounding box] (0,0) rectangle (162,66);
+\draw[green!60,fill=green!3,rounded corners=1mm] (1,1) rectangle (77,65);
+\draw[blue!60,fill=blue!3,rounded corners=1mm] (85,1) rectangle (161,65);
+\node[title,text=green] at (39,58) {Virtual experiment};
+\node[title,text=blue] at (123,58) {Reconstruction};
+\node[align=left,text width=68mm] at (39,31) {\texttt{blinking\_video.mp4}\\[2mm]\texttt{truth.csv}: source positions\\[2mm]\texttt{metadata.json}: settings\\[2mm]\texttt{preview\_frame.png}\\[2mm]\texttt{pattern\_mask.png}};
+\node[align=left,text width=68mm] at (123,31) {\texttt{raw\_mean.npy}, \texttt{superres.npy}\\[2mm]\texttt{localizations.csv}: positions\\[2mm]\texttt{summary.json}: run record\\[2mm]Image and diagnostic exports\\[2mm]Pipeline report and equations};
+\end{tikzpicture}
+\end{document}

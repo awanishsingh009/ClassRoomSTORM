@@ -1,5 +1,5 @@
 """
-ClassRoomSTORM Virtual Experiment V1.
+ClassRoomSTORM Virtual Experiment V1.2.
 
 This script is the student-facing virtual experiment app. It keeps the main
 workflow simple: choose a pattern, generate blinking frames, and export an MP4
@@ -35,10 +35,10 @@ from simulation import (
     write_truth_csv,
 )
 from video_io import read_video_frames, write_mp4
+from version import APP_VERSION
 
 
 APP_NAME = "ClassRoomSTORM Virtual Experiment"
-APP_VERSION = "V1.1"
 AUTHOR_CREDIT = "Developed by Dr. Awanish Pratap Singh"
 AUTHOR_AFFILIATION = "Institute of Biomedical Optics, University of Lübeck"
 TEXT_MASK_MODE = "fixed_16x16_led_alphabet"
@@ -468,6 +468,16 @@ def generate_dataset(
     frame_backend: str = "auto_cpu",
 ) -> dict:
     out = Path(output_dir)
+    if out.exists() and any(out.iterdir()):
+        raise ValueError("Output folder is not empty. Choose a new folder to preserve previous results.")
+    for name, value in {"sigma_px": sigma_px, "spacing_px": spacing_px, "photons": photons, "fps": fps}.items():
+        if not np.isfinite(value) or value <= 0:
+            raise ValueError(f"{name} must be finite and positive")
+    for name, value in {"background": background, "read_noise": read_noise}.items():
+        if not np.isfinite(value) or value < 0:
+            raise ValueError(f"{name} must be finite and nonnegative")
+    if int(frames) != frames or frames <= 0 or int(blinkers_per_frame) != blinkers_per_frame or blinkers_per_frame <= 0:
+        raise ValueError("frames and blinkers_per_frame must be positive integers")
     out.mkdir(parents=True, exist_ok=True)
     mask = build_source_mask(
         pattern,
