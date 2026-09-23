@@ -13,6 +13,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.11"]
+        include:
+          - os: macos-latest
+            python: "3.13"
     runs-on: ${{ matrix.os }}
     env:
       MPLBACKEND: Agg
@@ -22,7 +26,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python }}
           cache: pip
       - name: Install Linux GUI runtime
         if: runner.os == 'Linux'
@@ -44,3 +48,11 @@ jobs:
           python tools/prepare_github_release.py --output ../ci-release
           python tools/prepare_github_release.py --validate-source ../ci-release/ClassRoomSTORM_Source
           python tools/build_user_packages.py --validate --output-dir ../ci-release
+      - name: Exercise macOS package setup
+        if: runner.os == 'macOS'
+        run: |
+          export CLASSROOMSTORM_PYTHON="$(python -c 'import sys; print(sys.executable)')"
+          python tools/build_user_packages.py --output-dir ../installer-smoke
+          cd ../installer-smoke/ClassRoomSTORM_V1_User_macos
+          printf '\n' | bash setup_macos.command
+          .venv/bin/python apps/ClassRoomSTORM_Studio.py --help

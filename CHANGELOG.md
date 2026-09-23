@@ -1,5 +1,14 @@
 # Changelog
 
+## V1.2.2 - 2026-09-23
+
+- Select a supported Python on macOS, including versioned python.org and Homebrew installations available when opening setup from Finder.
+- Stop before package installation if only an unsupported Python such as Apple's Python 3.9 is available.
+- Preserve unsupported local environments before rebuilding them; keep student results in place and reject unsupported environments in the launcher.
+- Skip install-time byte compilation of dependency templates and report the failed setup stage accurately.
+- Add regression tests for Python selection, environment preservation, and launcher checks, plus a macOS Python 3.13 CI run.
+- Clarify macOS installation and keep direct Windows, macOS, and source download links in the README.
+
 ## V1.2.1 - 2026-09-22
 
 - Accept the English review in the manuals; remove long sentence dashes while retaining ranges and mathematical minus signs.

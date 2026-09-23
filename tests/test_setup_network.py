@@ -41,6 +41,8 @@ def test_setup_only_contacts_index_when_local_wheels_are_absent(tmp_path, offlin
     assert run.returncode == 0, run.stdout + run.stderr
     assert 'Setup completed' in run.stdout
     calls = [json.loads(line) for line in log.read_text().splitlines()]
+    if platform == 'macos':
+        assert '--no-compile' in calls[-1]
     if offline:
         assert len(calls) == 1
         assert '--no-index' in calls[0] and '--find-links' in calls[0]
