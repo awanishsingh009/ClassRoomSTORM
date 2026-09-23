@@ -1,0 +1,5 @@
+# Optional developer dependencies for numerical figure regeneration.
+-r requirements.txt
+scipy==1.17.1
+PyMuPDF==1.27.2.3
+# Also requires pdflatex, dvipng, and Poppler tools on PATH.

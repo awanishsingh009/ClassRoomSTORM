@@ -1,5 +1,5 @@
 % ======================================================================
-%  ClassRoomSTORM Studio V1.1 -- User Help
+%  ClassRoomSTORM Studio V1.2: User Help
 %  Self-contained LaTeX source. Compile from this directory with:
 %      pdflatex ClassRoomSTORM_Help.tex   (run twice)
 %  Figures live in ../figures/help/ and ../figures/theory/.
@@ -14,9 +14,11 @@
 \usepackage{amsmath,amssymb}
 \usepackage{geometry}
 \usepackage{graphicx}
+\usepackage[font=small,labelfont=bf]{caption}
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{enumitem}
+\usepackage{needspace}
 \usepackage{xcolor}
 \usepackage{tcolorbox}
 \tcbuselibrary{breakable}
@@ -24,22 +26,29 @@
 \usepackage{cleveref}
 
 \geometry{margin=24mm}
+% Keep figure-only pages aligned at the top with a deliberate inter-float gap.
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpsep}{16pt plus 2pt minus 2pt}
+\setlength{\@fpbot}{0pt plus 1fil}
+\makeatother
 \graphicspath{{../figures/help/}{../figures/theory/}{figures/help/}{figures/theory/}}
 \hypersetup{colorlinks=true, linkcolor=blue!45!black, urlcolor=blue!45!black,
   citecolor=blue!45!black,
-  pdftitle={ClassRoomSTORM Studio V1.1 -- User Help},
+  pdftitle={ClassRoomSTORM Studio V1.2: User Help},
   pdfauthor={Awanish Pratap Singh},
   pdfsubject={User guide for the ClassRoomSTORM Studio teaching application}}
 \setlist[itemize]{itemsep=2pt, topsep=4pt}
 \setlist[enumerate]{itemsep=3pt, topsep=4pt}
+\emergencystretch=3em
 
 % ---- Callout boxes --------------------------------------------------
 \newtcolorbox{csnote}[1][Note]{breakable, colback=blue!4, colframe=blue!55!black,
-  fonttitle=\bfseries, coltitle=blue!55!black, title={#1}, boxrule=0.5pt, arc=2pt}
+  fonttitle=\bfseries, coltitle=white, title={#1}, boxrule=0.5pt, arc=2pt}
 \newtcolorbox{cstip}[1][Tip]{breakable, colback=green!6, colframe=green!45!black,
-  fonttitle=\bfseries, coltitle=green!45!black, title={#1}, boxrule=0.5pt, arc=2pt}
+  fonttitle=\bfseries, coltitle=white, title={#1}, boxrule=0.5pt, arc=2pt}
 \newtcolorbox{cswarn}[1][Warning]{breakable, colback=red!5, colframe=red!60!black,
-  fonttitle=\bfseries, coltitle=red!60!black, title={#1}, boxrule=0.5pt, arc=2pt}
+  fonttitle=\bfseries, coltitle=white, title={#1}, boxrule=0.5pt, arc=2pt}
 
 % ---- Screenshot placeholder (for application screenshots only) ------
 \newcommand{\figph}[2][6cm]{%
@@ -48,7 +57,7 @@
   \fcolorbox{gray!55}{gray!8}{%
     \parbox[c][#1][c]{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{%
       \centering\itshape\small #2\par\medskip
-      \upshape\footnotesize\textcolor{gray!60!black}{[\,screenshot placeholder --- capture from the running application\,]}}}%
+      \upshape\footnotesize\textcolor{gray!60!black}{[\,screenshot placeholder: capture from the running application\,]}}}%
   \endgroup}
 
 \newcommand{\ui}[1]{\textbf{#1}}
@@ -56,10 +65,10 @@
 \newcommand{\app}{ClassRoomSTORM}
 \newcommand{\studio}{\app{} Studio}
 
-\title{\textbf{\studio{} V1.1}\\[2pt]\large User Help --- Virtual and Experimental
+\title{\textbf{\studio{} V1.2}\\[2pt]\large User Help: Virtual and Experimental
        Super-Resolution Microscopy}
 \author{Awanish Pratap Singh}
-\date{Software version 1.1}
+\date{Software version 1.2}
 
 % ======================================================================
 \begin{document}
@@ -67,21 +76,21 @@
 \thispagestyle{empty}
 
 \begin{abstract}
-\noindent This Help document explains how to install and use \studio{} V1.1, a
+\noindent This Help document explains how to install and use \studio{} V1.2, a
 desktop teaching application for localization-based super-resolution microscopy.
-It is task-oriented: it tells you what each screen and control does. The physics
-behind the method --- diffraction, blinking, localization, and precision --- is
+It describes the tasks you can perform and explains each screen and control. The physics
+behind the method (diffraction, blinking, localization, and precision) is
 explained in the companion document, \emph{\app{} Theory Notes}.
 \end{abstract}
 
-\tableofcontents
+\begingroup\small\tableofcontents\endgroup
 \newpage
 
 % ======================================================================
 \section{What \app{} Is and Is Not}
 \label{sec:what}
 
-\studio{} V1.1 is a desktop teaching application for \emph{localization-based
+\studio{} V1.2 is a desktop teaching application for \emph{localization-based
 super-resolution microscopy}. It has two workflows:
 
 \begin{itemize}
@@ -93,35 +102,31 @@ super-resolution microscopy}. It has two workflows:
 \end{itemize}
 
 \app{} reproduces the \emph{statistical and computational logic} of
-single-molecule localization microscopy (SMLM) --- the family of methods that
-includes STORM and PALM --- in a form that needs no lasers, no fluorescence
+single-molecule localization microscopy (SMLM), the family of methods that includes STORM and PALM, in a form that needs no lasers, no fluorescence
 optics, and no scientific camera.
 
 \begin{csnote}[What this means]
 \app{} is a \emph{learning tool}, not a fluorescence microscope and not a
-research-grade analysis package. Its reconstruction deliberately uses a simple,
-fully transparent method --- detect bright spots, take an intensity-weighted
-centroid, and accumulate --- so that every step is visible and explainable. It
+research-grade analysis package. Its reconstruction deliberately uses a simple method that detects bright spots, calculates an intensity-weighted centroid, and accumulates the positions, so that students can inspect and understand every step. It
 does not perform Gaussian model fitting, maximum-likelihood estimation,
-drift correction, or applied physical calibration; those belong to the theory
-background and to possible future extensions (see the \emph{Theory} document).
+or drift correction. Manual physical calibration is applied to exported
+coordinates; it does not estimate uncertainty (see the \emph{Theory} document).
 \end{csnote}
 
 % ======================================================================
 \section{Concepts in 60 Seconds}
 \label{sec:concepts}
 
-\begin{description}[style=nextline, leftmargin=0pt]
+\begin{description}[style=unboxed, leftmargin=0pt]
   \item[Blinking video.] A video with many frames in which, at any instant, only
         a few light sources (``blinkers'') are switched on. Each blinker appears
         as a small blurred spot.
   \item[Localize.] In each frame, \app{} finds the centre of every bright spot.
         Although the spot is blurry and several pixels wide, its \emph{centre}
         can be estimated to better than one pixel.
-  \item[Accumulate.] The centres found in all frames are collected into a single
-        image --- the \emph{reconstructed image}. Because it is built from sharp
+  \item[Accumulate.] The centres found in all frames are collected into a single image, the \emph{reconstructed image}. Because it is built from sharp
         centres rather than blurry spots, it is much crisper than the raw video.
-  \item[Compare.] The plain average of the video frames (\ui{Raw Mean}) is
+  \item[Compare.] The arithmetic mean of the video frames (\ui{Raw Mean}) is
         blurry; the \ui{Super-Resolution} image is the accumulated
         reconstruction. Comparing the two is the central activity.
 \end{description}
@@ -129,15 +134,14 @@ background and to possible future extensions (see the \emph{Theory} document).
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\linewidth]{H1_concept_loop}
-  \caption{The \app{} loop: blink, localize, accumulate, and compare.}
+  \caption{Conceptual progression from sparse blinking through position estimation to comparison with data or known truth.}
   \label{fig:loop}
 \end{figure}
 
 \begin{cstip}[The truth-data rule]
 When you create a Virtual Experiment, \app{} also saves the exact positions it
 used, in a file called \file{truth.csv}. Reconstruction does \emph{not} read this
-file. You compare your reconstruction against it only \emph{afterwards}, to score
-your result --- like not peeking at an answer key. Keep \file{truth.csv} in its
+file. You compare your reconstruction against it only \emph{afterwards}, to evaluate your result, much as you would check an answer key after solving a problem. Keep \file{truth.csv} in its
 original folder and do not feed it into the reconstruction.
 \end{cstip}
 
@@ -145,7 +149,7 @@ original folder and do not feed it into the reconstruction.
 \section{Installation and Setup}
 \label{sec:install}
 
-\app{} V1.1 is a Python desktop application. The user package includes ready-made
+\app{} V1.2 is a Python desktop application. The user package includes ready-made
 setup and launch scripts, so most users never need to type any commands.
 
 \paragraph{Requirements.} The Windows setup script looks for Python 3.11, 3.12,
@@ -153,11 +157,11 @@ or 3.13 automatically, using the Python launcher (\file{py}) when available. If
 no supported Python is found, it can offer to install Python 3.11 with
 \file{winget} or open the official Python download page. On macOS, install
 Python 3.10 or newer from \url{https://www.python.org/} before running setup.
-First-time setup downloads roughly 250--350~MB of packages from the Python
-Package Index (PyPI), so an internet connection is needed --- unless your package
+First-time setup downloads roughly 250-350~MB of packages from the Python
+Package Index (PyPI), so an internet connection is needed unless your package
 includes an offline \file{wheels} folder (see below).
 
-\paragraph{Recommended --- run the setup script.}
+\paragraph{Recommended: run the setup script.}
 \begin{itemize}
   \item \textbf{Windows:} double-click \file{setup\_windows.bat}.
   \item \textbf{macOS:} double-click \file{setup\_macos.command}. The first time,
@@ -165,31 +169,33 @@ includes an offline \file{wheels} folder (see below).
         \file{chmod +x setup\_macos.command} in Terminal once.
 \end{itemize}
 The script builds a private environment (a \file{.venv} folder inside the package)
-and installs the required packages. When it finishes it prints
-\emph{Setup completed}. If it fails partway it removes the incomplete environment,
-so the launcher never starts from a broken install.
+and installs the required packages. When it finishes, it prints
+\emph{Setup completed}. If it fails partway through, it preserves the environment for a
+retry. The launcher checks required imports before starting.
 
 \paragraph{Offline installation.} If the package folder contains a \file{wheels}
 folder, the setup script installs from it automatically and no internet access is
 needed. This is useful on restricted or proxy-protected networks.
 
-\paragraph{Manual installation (advanced).} Instead of the script you may open a
+\paragraph{Manual installation (advanced).} Instead of using the script, you may open a
 terminal in the package folder and run \file{python -m venv .venv}, activate it
-(Windows PowerShell:
-\file{.{\textbackslash}.venv{\textbackslash}Scripts{\textbackslash}Activate.ps1};
-macOS or Linux: \file{source .venv/bin/activate}), then run
+(Windows PowerShell activation command shown below;
+macOS or Linux: \file{source .venv/bin/activate}), and then run
 \file{python -m pip install -{}-upgrade pip} followed by
 \file{python -m pip install -r requirements.txt}. The standard packages are
 \file{numpy}, \file{opencv-python}, \file{matplotlib}, \file{Pillow}, and
 \file{PySide6}.
+\begin{quote}\small\ttfamily
+.{\textbackslash}.venv{\textbackslash}Scripts{\textbackslash}Activate.ps1
+\end{quote}
 
 \begin{csnote}[Optional extras]
 \textbf{Graphviz} produces cleaner pipeline diagrams. Without it, \app{} draws
-the same diagrams with Matplotlib instead, so it is not required. \textbf{NVIDIA
+the same diagrams with Matplotlib instead, so Graphviz is not required. \textbf{NVIDIA
 CUDA GPU} acceleration is experimental; install it with
 \file{python -m pip install -r requirements-gpu.txt} only if you have a
-CUDA-capable NVIDIA card. AMD, Intel, and Apple-Silicon GPUs are not supported in
-V1.1 --- those systems use the CPU.
+CUDA-capable NVIDIA card. AMD, Intel, and Apple Silicon GPUs are not supported in
+V1.2; those systems use the CPU.
 \end{csnote}
 
 % ======================================================================
@@ -197,17 +203,20 @@ V1.1 --- those systems use the CPU.
 \label{sec:launcher}
 
 Start the application with the launch script in the package folder:
-\textbf{Windows} --- double-click \file{launch\_studio\_windows.bat};
-\textbf{macOS} --- double-click \file{launch\_studio\_macos.command}. The launch
+\begin{itemize}
+\item \textbf{Windows}: double-click \file{launch\_studio\_windows.bat}.
+\item \textbf{macOS}: double-click \file{launch\_studio\_macos.command}.
+\end{itemize}
+The launch
 script checks that the required packages are installed and, if they are missing,
 asks you to run the setup script first. Advanced users may instead run
 \file{python apps/ClassRoomSTORM\_Studio.py} from an activated environment.
 
 The \studio{} launcher window offers two large buttons:
 \begin{itemize}
-  \item \ui{Virtual Experiment} --- create blinking data from a logo, letter, or
+  \item \ui{Virtual Experiment}: create blinking data from a logo, letter, or
         pattern (\cref{sec:virtual});
-  \item \ui{SR Reconstruction} --- reconstruct a recorded or simulated blinking
+  \item \ui{SR Reconstruction}: reconstruct a recorded or simulated blinking
         video (\cref{sec:recon}).
 \end{itemize}
 Two text links, \ui{Help} and \ui{Theory}, open this document and the Theory
@@ -216,7 +225,7 @@ companion (the PDF files in the \file{docs} folder).
 \begin{cswarn}[The launcher closes when you open a workflow]
 When you click \ui{Virtual Experiment} or \ui{SR Reconstruction}, the launcher
 window fades out and \emph{closes itself}; the chosen workflow then opens as a
-separate window. This is normal --- the application has not crashed. To return to
+separate window. This is normal; the application has not crashed. To return to
 the launcher, use the \ui{Back to Studio} toolbar button at the top of the
 workflow window, or run the launch command again.
 \end{cswarn}
@@ -239,10 +248,10 @@ This walkthrough takes about ten minutes and uses only simulated data.
 \begin{enumerate}
   \item \textbf{Launch} the Studio and click \ui{Virtual Experiment}.
   \item On the \ui{1 Pattern} page, set \ui{Pattern} to \texttt{text} and type a
-        short word (for example \texttt{ABBE}) in the \ui{Text} box.
+        short word (for example, \texttt{ABBE}) in the \ui{Text} box.
   \item On the \ui{2 Blinking} page, set \ui{Frames} to about \texttt{300} for a
         quick first run.
-  \item On the \ui{3 Image Formation} page, leave the defaults.
+  \item On the \ui{3 Image Formation} page, keep the default settings.
   \item On the \ui{4 Preview} page, click \ui{Preview Source Mask} and then
         \ui{Preview Sample Blink Frame} to see what you are about to generate.
   \item On the \ui{5 Export} page, click \ui{Export Dataset}. Note the output
@@ -274,10 +283,10 @@ The Virtual Experiment builds a synthetic blinking video. Its window has five
 numbered steps in the left-hand list: \ui{1 Pattern}, \ui{2 Blinking},
 \ui{3 Image Formation}, \ui{4 Preview}, and \ui{5 Export}.
 
-\subsection{Step 1 --- Pattern}
+\subsection{Step 1: Pattern}
 \label{sec:ve-pattern}
 
-The pattern defines \emph{where} the source points sit. Choose one of three
+The pattern defines \emph{where} the source points are located. Choose one of three
 pattern types with the \ui{Pattern} control.
 
 \begin{table}[htbp]
@@ -289,17 +298,17 @@ pattern types with the \ui{Pattern} control.
 \ui{Pattern} & Source pattern type: \texttt{text}, \texttt{dots}, or
   \texttt{logo}. & \texttt{text}\\
 \ui{Text} & The word drawn in \texttt{text} mode, using a fixed
-  16$\times$16 LED-style alphabet (A--Z, 0--9, space, \texttt{-}, \texttt{\_}).
+  16$\times$16 LED-style alphabet (A-Z, 0-9, space, \texttt{-}, \texttt{\_}).
   & \texttt{ABBE}\\
 \ui{Dot mode} & For \texttt{dots} mode: \texttt{single} (one point),
   \texttt{pair} (two close points), or \texttt{random} (several points).
   & \texttt{single}\\
 \ui{Logo} & For \texttt{logo} mode: an image file (use \ui{Browse Logo}). The
-  image is converted to a black-and-white mask. & ---\\
-\ui{Logo scale} & Scales the logo mask (0.1--5.0). & \texttt{1.0}\\
+  image is converted to a black-and-white mask. & -\\
+\ui{Logo scale} & Scales the logo mask (0.1-5.0). & \texttt{1.0}\\
 \ui{Logo sampling} & How logo pixels become source points: \texttt{grid},
   \texttt{all\_pixels}, or \texttt{random\_max\_points}. & \texttt{grid}\\
-\ui{Logo grid step px} & Spacing of the sampling grid, in pixels (1--100).
+\ui{Logo grid step px} & Spacing of the sampling grid, in pixels (1-100).
   & \texttt{1}\\
 \ui{Logo max source points} & Upper limit on logo points; \texttt{0} means no
   limit. & \texttt{0}\\
@@ -312,13 +321,11 @@ pattern types with the \ui{Pattern} control.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.80\linewidth]{H4_pattern_preview}
-  \caption{A source pattern (a) becomes a set of source points (b). The Virtual
-  Experiment switches random subsets of these points on and off to build the
-  blinking video.}
+  \caption{A schematic source pattern and one illustrative set of source positions. The mask defines eligible regions; it is not a measured optical image or a guarantee of one emitter per bright connected region.}
   \label{fig:ve-pattern}
 \end{figure}
 
-\subsection{Step 2 --- Blinking}
+\subsection{Step 2: Blinking}
 \label{sec:ve-blinking}
 
 This page controls \emph{how the source points switch on and off} over the
@@ -330,18 +337,17 @@ frames of the video.
 \toprule
 \textbf{Control} & \textbf{What it does} & \textbf{Default}\\
 \midrule
-\ui{Frames} & Number of frames in the generated video (1--10000). More frames
-  give a denser reconstruction but take longer. & \texttt{1000}\\
+\ui{Frames} & Number of frames in the generated video (1-10000). More frames give a denser reconstruction but require more processing time. & \texttt{1000}\\
 \ui{Max blinkers/frame} & The largest number of source points allowed to be on
   in any one frame. The actual number may be lower if spacing rules cannot be
   met. & \texttt{30}\\
-\ui{Blinker spacing} & How far apart simultaneously-on blinkers must be:
+\ui{Blinker spacing} & How far apart blinkers that are on simultaneously must be:
   \texttt{separated}, \texttt{touching}, \texttt{overlapping}, or
   \texttt{random}. & \texttt{separated}\\
 \ui{Manual min distance px} & A reference separation distance, in pixels, that
   the spacing mode scales. & \texttt{100.0}\\
 \ui{Effective min distance} & Read-only. Shows the separation actually applied.
-  & ---\\
+  & -\\
 \bottomrule
 \end{tabularx}
 \caption{Controls on the \ui{2 Blinking} page.}
@@ -349,17 +355,16 @@ frames of the video.
 \end{table}
 
 \begin{csnote}[Why blinkers must be separated]
-If too many blinkers are on at once and they sit close together, their blurred
-spots overlap and cannot be told apart. Sparse, well-separated blinking is what
-makes localization possible --- this is the core idea of the method (see the
+If too many blinkers are on at once and they are close together, their blurred
+spots overlap and cannot be distinguished. Sparse, well-separated blinking is what
+makes localization possible; this is the core idea of the method (see the
 \emph{Theory} document).
 \end{csnote}
 
-\subsection{Step 3 --- Image Formation}
+\subsection{Step 3: Image Formation}
 \label{sec:ve-formation}
 
-This page sets how each source point is rendered into a camera-like image: how
-blurred, how bright, and how noisy. \Cref{fig:ve-frame} shows one resulting
+This page controls the blur, brightness, and noise used to render each source point in a simulated camera image. \Cref{fig:ve-frame} shows one resulting
 frame.
 
 \begin{table}[htbp]
@@ -368,15 +373,14 @@ frame.
 \toprule
 \textbf{Control} & \textbf{What it does} & \textbf{Default}\\
 \midrule
-\ui{sigma\_px} & The blur width $\sigma$ of each spot, in pixels --- the
-  point-spread width (0.5--50). Larger values give wider, blurrier spots.
+\ui{sigma\_px} & The blur width $\sigma$ of each spot, in pixels, or the point-spread width (0.5-50). Larger values give wider, blurrier spots.
   & \texttt{10.0}\\
 \ui{Spacing px} & The distance, in pixels, between neighbouring points of the
-  source mask when they are placed in the image (1--100). & \texttt{2.6}\\
+  source mask when they are placed in the image (1-100). & \texttt{2.6}\\
 \ui{Brightness} & The base number of signal photons per blinker
-  (1--1\,000\,000). & \texttt{80000}\\
+  (1-1\,000\,000). & \texttt{80000}\\
 \ui{Effective brightness} & Read-only. The brightness actually used (see the
-  note below). & ---\\
+  note below). & -\\
 \ui{Background} & A constant background level added to every pixel. &
   \texttt{1.0}\\
 \ui{Read noise} & The strength of the camera-like random read noise. &
@@ -389,28 +393,26 @@ frame.
 
 \begin{csnote}[\ui{Brightness} vs.\ \ui{Effective brightness}]
 \app{} scales the \ui{Brightness} you enter by a factor that grows with the
-number of blinkers per frame, so that busy frames stay visible. The scaled value
-is shown in the read-only \ui{Effective brightness} field, and \emph{that} value
-is what is used to render the frames. If your frames look brighter or dimmer than
+number of blinkers per frame, so that frames with many blinkers remain visible. The scaled value
+is shown in the read-only \ui{Effective brightness} field, and \emph{that} value is used to render the frames. If your frames look brighter or dimmer than
 expected, check \ui{Effective brightness}, not \ui{Brightness}.
 \end{csnote}
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.70\linewidth]{H5_blinking_frame}
-  \caption{A single simulated blinking frame: only a few emitters are on, each
-  appearing as a blurred spot on a noisy background.}
+  \caption{One raw synthetic frame from the recorded two-source run. Only one emitter is active in this frame; signal and background are Poisson-distributed.}
   \label{fig:ve-frame}
 \end{figure}
 
-\subsection{Step 4 --- Preview}
+\subsection{Step 4: Preview}
 \label{sec:ve-preview}
 
-Two buttons let you check your settings before generating anything:
+Two buttons let you check your settings before generating the dataset:
 \ui{Preview Source Mask} shows the pattern of source points, and \ui{Preview
 Sample Blink Frame} shows one example frame. Previewing does not write any files.
 
-\subsection{Step 5 --- Export}
+\subsection{Step 5: Export}
 \label{sec:ve-export}
 
 Choose an output folder (or accept the suggested one) and click
@@ -434,7 +436,7 @@ generation manually.
 \toprule
 \textbf{File} & \textbf{Contents}\\
 \midrule
-\file{blinking\_video.mp4} & The blinking video --- the input for reconstruction.\\
+\file{blinking\_video.mp4} & The blinking video, which is the input for reconstruction.\\
 \file{truth.csv} & The exact source positions used. For comparison
   \emph{after} reconstruction only (see the truth-data rule).\\
 \file{preview\_frame.png} & A sample blinking frame.\\
@@ -451,11 +453,10 @@ generation manually.
 \label{sec:recon}
 
 SR Reconstruction turns a blinking video into a reconstructed image. The video
-may be one you made with the Virtual Experiment or a real recorded blinking
-video. The window has six numbered steps: \ui{1 Load Video}, \ui{2 Calibration},
+may be one you made with the Virtual Experiment or a recorded video of physical blinking sources. The window has six numbered steps: \ui{1 Load Video}, \ui{2 Calibration},
 \ui{3 Preprocess}, \ui{4 Blinker Mode}, \ui{5 Processing}, and \ui{6 Results}.
 
-\subsection{Step 1 --- Load Video}
+\subsection{Step 1: Load Video}
 \label{sec:rc-load}
 
 Click \ui{Browse Video} and choose an MP4, AVI, or MOV file. \app{} reads the
@@ -464,21 +465,23 @@ rate). You may also set an \ui{Output label} and an \ui{Output} folder for the
 results. The \ui{Inspect} button repeats this inspection at any time.
 
 The \ui{Play video} button plays the loaded video frame by frame in the
-preview, and the slider beside it scrubs through the frames --- a quick way to
+preview, and the slider beside it scrubs through the frames, providing a quick way to
 see the raw blinking data before reconstructing it.
 
-\subsection{Step 2 --- Calibration}
+\subsection{Step 2: Calibration}
 \label{sec:rc-calib}
 
-\begin{csnote}[Calibration is recorded but not yet applied in V1.1]
-The \ui{Calibration} page lets you enter a physical scale (units per pixel).
-In V1.1, reconstruction runs entirely in \emph{pixel units}: the values on this
-page are recorded but are not applied to the results. You can safely leave this
-page on its default \ui{Pixels only} setting. Working in pixels is intentional
---- it keeps the method general and avoids unit-conversion errors.
+\begin{csnote}[Calibration applies to exported coordinates]
+Choose \ui{Manual calibration}, enter a positive \ui{Unit per pixel}, and set
+the \ui{Unit label}, for example, mm. The CSV retains crop-local
+\file{x\_px}/\file{y\_px}, adds original-frame
+\file{x\_full\_px}/\file{y\_full\_px}, and exports
+\file{x\_calibrated}/\file{y\_calibrated} relative to the original frame origin.
+Images and linked profiles retain pixel axes. Leave \ui{Pixels only} selected
+when a physical scale is unavailable. Calibration does not establish precision.
 \end{csnote}
 
-\subsection{Step 3 --- Preprocess}
+\subsection{Step 3: Preprocess}
 \label{sec:rc-preprocess}
 
 If you only want to reconstruct part of the field of view, tick \ui{Enable crop}
@@ -493,34 +496,34 @@ fills these boxes with the full video size automatically; adjust them from
 there.
 \end{cswarn}
 
-\begin{csnote}[Two options on this page are not yet active]
-The \ui{Reject bad frames} and \ui{Background correction} checkboxes are shown
-on the \ui{3 Preprocess} page but have no effect in V1.1. They are reserved for
-a future version.
+\begin{csnote}[Background subtraction and threshold]
+\ui{Subtract frame median background} subtracts the median intensity of each
+cropped frame and clips negative values to zero before thresholding and
+localization. This option is off by default and assumes sparse bright emitters on a
+roughly uniform background. The exported raw mean remains uncorrected.
+\ui{Threshold quantile} defaults to 0.995. Blank and constant frames produce
+no localizations; invalid image arrays stop processing with an error.
 \end{csnote}
 
-\subsection{Step 4 --- Blinker Mode}
+\subsection{Step 4: Blinker Mode}
 \label{sec:rc-mode}
 
 The \ui{Blinker mode} control tells \app{} how many bright spots to expect in
 each frame:
 
-\begin{description}[leftmargin=1.6em]
-  \item[\texttt{single}] One localization per frame --- the single brightest
-        region.
-  \item[\texttt{multiple}] Several localizations per frame --- each separated
-        bright region is located independently.
+\begin{description}[style=unboxed,leftmargin=0pt]
+  \item[\texttt{single}] At most one localization per frame, from the single brightest region.
+  \item[\texttt{multiple}] Several localizations per frame, with each separated bright region located independently.
   \item[\texttt{auto}] \app{} scans the first part of the video and chooses
         \texttt{single} or \texttt{multiple} for you. This is the default.
 \end{description}
 
 \begin{cstip}
 Use \texttt{single} for data with one blinker at a time, and \texttt{multiple}
-when several well-separated blinkers can be on together. If you are unsure, leave
-it on \texttt{auto}. The mode actually used is recorded in \file{summary.json}.
+when several well-separated blinkers can be on together. If you are unsure, leave the mode on \texttt{auto}. The mode actually used is recorded in \file{summary.json}.
 \end{cstip}
 
-\subsection{Step 5 --- Processing}
+\subsection{Step 5: Processing}
 \label{sec:rc-processing}
 
 The \ui{Processing backend} controls how the computation is distributed.
@@ -536,8 +539,7 @@ The \ui{Processing backend} controls how the computation is distributed.
 \ui{Auto CPU} & Uses several CPU cores in parallel when that is worthwhile,
   capped at about 90\% of available CPUs.\\
 \ui{Only GPU} & Uses an NVIDIA CUDA GPU for the single-blinker path.\\
-\ui{Auto CPU+GPU} & Uses the GPU for single blinkers and parallel CPU for
-  multiple blinkers.\\
+\ui{Auto CPU+GPU} & Uses the GPU for single blinkers and parallel CPU processing for multiple blinkers.\\
 \ui{Auto CPU+GPU acceleration} & An experimental hybrid path.\\
 \bottomrule
 \end{tabularx}
@@ -547,23 +549,29 @@ The \ui{Processing backend} controls how the computation is distributed.
 
 \ui{Workers (0=auto)} sets the number of CPU processes; \texttt{0} lets \app{}
 choose up to about 90\% of available CPUs. \ui{Max frames (0=all)} limits how
-many frames are processed --- useful for a quick test run.
+many frames are processed, which is useful for a quick test run.
 
 \begin{cswarn}[GPU backends fall back to the CPU silently]
 The GPU backends need an NVIDIA card with CUDA and the optional GPU packages
-installed. If these are missing, \app{} does \emph{not} stop --- it quietly runs
+installed. If the required hardware or packages are missing, \app{} does \emph{not} stop; it quietly runs
 on the CPU and records the fallback in \file{summary.json}. If GPU speed
-matters, open \file{summary.json} after the run and confirm the GPU was actually
-used.
+matters, open \file{summary.json} after the run and confirm that the GPU was used.
 \end{cswarn}
 
-\subsection{Step 6 --- Run and Results}
+\subsection{Step 6: Run and Results}
 \label{sec:rc-results}
 
-On the \ui{6 Results} page you may enter \ui{Cumulative frames} (frame counts at
-which to save intermediate reconstructions --- comma-separated whole numbers) and
+Reconstruction and figure export run in a background worker, so the window
+remains responsive. Wait for completion before closing the application.
+Choose an empty output folder: existing results are protected from replacement.
+When truth comparison is selected, \ui{Truth match radius (px)} sets the maximum
+allowed distance. Matching is one-to-one within the same frame and uses
+original-frame coordinates. Only ground-truth entries within the processed crop and frame range are evaluated. The summary reports precision, recall, F1, unmatched counts,
+and matched-position errors; undefined metrics are recorded as null.
+
+On the \ui{6 Results} page you may enter \ui{Cumulative frames} (frame counts at which to save intermediate reconstructions, entered as comma-separated whole numbers) and
 tick \ui{Compare with truth after run} if a \file{truth.csv} is available. Click
-\ui{Run Reconstruction}. When it finishes, the results appear in the browser,
+\ui{Run Reconstruction}. When reconstruction finishes, the results appear in the browser,
 grouped as \ui{Main Results}, \ui{Diagnostics}, \ui{Learning Progress},
 \ui{Teaching Pipeline}, and \ui{Data Files}.
 
@@ -587,8 +595,7 @@ grouped as \ui{Main Results}, \ui{Diagnostics}, \ui{Learning Progress},
 \section{Linked Profile Viewer}
 \label{sec:profiles}
 
-The \ui{Linked Profiles} tab, in the \ui{Main Results} group, is the clearest
-way to see what reconstruction achieved. It appears when a reconstruction has
+The \ui{Linked Profiles} tab, in the \ui{Main Results} group, is a way to compare the raw and reconstructed images. It appears when a reconstruction has
 produced both raw and reconstructed image data.
 
 The viewer shows the \ui{Raw mean} image and the \ui{Reconstruction} image side
@@ -597,23 +604,20 @@ either image} to place a crosshair; the plots update to show the intensity along
 the row and the column through that point.
 
 \begin{itemize}
-  \item The \textcolor{red!70!black}{\textbf{red}} curve is the \ui{Raw mean}
-        image --- a wide, blurred bump.
+  \item The \textcolor{red!70!black}{\textbf{red}} curve is the \ui{Raw mean} image, which appears as a wide, blurred bump.
   \item The \textcolor{blue!70!black}{\textbf{blue}} curve is the
-        \ui{Reconstruction} --- a much narrower peak at the same place.
+        \ui{Reconstruction}, which displays positions using a fixed-width kernel.
 \end{itemize}
 
 The horizontal axis is the pixel coordinate; the vertical axis is normalized
-intensity (each curve scaled to a 0--1 range so the shapes can be compared
-directly). A narrow blue peak beside a wide red bump is the visual signature of
-super-resolution.
+intensity (each curve is scaled to a 0-1 range so the shapes can be compared
+directly). Displayed peak width depends on the rendering kernel and normalization;
+a narrow reconstruction peak alone is not a resolution measurement.
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\linewidth]{H8_linked_profile}
-  \caption{The linked profile viewer compares the raw and reconstructed images
-  along the same line. Red is the raw (diffraction-limited) image; blue is the
-  reconstruction.}
+  \caption{Linked row profiles from the recorded two-source synthetic reconstruction. Dashed horizontal lines identify camera row 40; each profile is peak-normalized. A profile describes the displayed images and is not an independent resolution measurement.}
   \label{fig:profiles}
 \end{figure}
 
@@ -621,15 +625,13 @@ super-resolution.
 \section{Reading Output Files and Diagnostic Figures}
 \label{sec:reading}
 
-\begin{description}[style=nextline, leftmargin=0pt]
-  \item[\ui{Raw Mean}] The plain average of all processed frames --- a
-        diffraction-limited, blurry image.
+\begin{description}[style=unboxed, leftmargin=0pt]
+  \item[\ui{Raw Mean}] The arithmetic mean of all processed frames, forming a diffraction-limited, blurry image.
   \item[\ui{Super-Resolution}] The reconstructed image, built by accumulating
         all localizations.
   \item[\ui{Raw vs Super-Resolution}] The two images side by side.
   \item[\ui{Localization Scatter} / \ui{Density Map} / \ui{Raw Overlay}]
-        Diagnostic plots: where localizations landed, how densely, and how they
-        sit on top of the raw image.
+        Diagnostic plots: localization positions, their density, and their distribution over the raw image.
   \item[\ui{Learning Progress}] Cumulative reconstructions showing how the image
         sharpens as more frames are added.
   \item[\ui{Teaching Pipeline}] A step-by-step report (\file{pipeline\_report
@@ -641,15 +643,14 @@ super-resolution.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\linewidth]{H9_output_map}
-  \caption{The files written by each workflow. Reconstruction writes both a
-  \file{.npy} numerical array and a \file{.png} image for the raw mean and the
-  super-resolution image; the linked profile viewer uses the \file{.npy} files.}
+  \caption{Output roles for the virtual experiment and reconstruction workflows.}
   \label{fig:outputs}
 \end{figure}
 
 % ======================================================================
 \section{Input and Output File Table}
 \label{sec:files}
+Table~\ref{tab:io} lists the files read and written by each workflow.
 
 \begin{table}[htbp]
 \centering\small
@@ -680,10 +681,9 @@ SR Reconstruction & writes & \file{localizations.csv};
 \section{Troubleshooting}
 \label{sec:troubleshoot}
 
-\begin{description}[style=nextline, leftmargin=0pt]
+\begin{description}[style=unboxed, leftmargin=0pt]
   \item[Setup fails to download the packages.]
-        This usually means there is no internet access, or a restricted or proxy
-        network where Python cannot verify PyPI security certificates (a
+        This usually means that there is no internet access or that a restricted or proxy network prevents Python from verifying PyPI security certificates (a
         \texttt{CERTIFICATE\_VERIFY\_FAILED} error). Try an unrestricted network,
         ask your IT support how pip should reach PyPI, or use a package that
         includes an offline \file{wheels} folder.
@@ -702,7 +702,7 @@ SR Reconstruction & writes & \file{localizations.csv};
         the \ui{Back to Studio} toolbar button at the top of the workflow window,
         or run the launch command again to get it back.
   \item[No bright spots are detected / the reconstruction is empty.]
-        Check the video contrast on the first frame. Very dark or very noisy
+        Check the contrast in the first video frame. Very dark or very noisy
         videos may have no clear spots. Try \texttt{multiple} blinker mode.
   \item[The reconstruction looks too sparse.]
         Use more frames, or (for a Virtual Experiment) increase
@@ -729,21 +729,21 @@ SR Reconstruction & writes & \file{localizations.csv};
 \section{Glossary}
 \label{sec:glossary}
 
-\begin{description}[style=nextline, leftmargin=0pt, itemsep=2pt]
+\begin{description}[style=unboxed, leftmargin=0pt, itemsep=2pt]
   \item[Blinker] A light source that switches on and off; it appears as a bright
         spot when on.
-  \item[Localization] An estimate of the centre position of one bright spot.
+  \item[Localization] An estimate of the position of one bright spot's centre.
   \item[Centroid] The brightness-weighted average position of a spot's pixels;
-        the method \app{} uses to localize.
+        the method \app{} uses to localize spots.
   \item[Threshold] The brightness level above which pixels are treated as part
         of a spot.
   \item[Point-spread width ($\sigma$)] How wide a single point of light appears
         after blurring; the \ui{sigma\_px} control.
   \item[Reconstructed (super-resolution) image] The sharp image built by
         accumulating localizations.
-  \item[Raw mean] The blurry plain average of the video frames.
+  \item[Raw mean] The blurry arithmetic mean of the video frames.
   \item[Ground truth] The known, exact source positions, saved in
-        \file{truth.csv}, used only to score a reconstruction afterwards.
+        \file{truth.csv}, used only to evaluate a reconstruction afterwards.
   \item[Frame] One image in the video.
   \item[Signal photons] The brightness of a blinker, set by \ui{Brightness}.
   \item[Background] A constant light level added to every pixel.
@@ -753,15 +753,14 @@ SR Reconstruction & writes & \file{localizations.csv};
 \end{description}
 
 % ======================================================================
+\Needspace{26\baselineskip}
 \section{Instructor Notes}
 \label{sec:instructors}
 
-\paragraph{Short session (2--3 hours).} Use the Virtual Experiment only.
-Students generate a dataset, reconstruct it, and explore the linked profiles. A
-good guided question: \emph{why} is the blue curve narrower than the red one?
+\paragraph{Short session (2-3 hours).} Use the Virtual Experiment only.
+Students generate a dataset, reconstruct it, and explore the linked profiles. One useful question is: \emph{why} is the blue curve narrower than the red one?
 
-\paragraph{Longer project (1--2 weeks).} Add a real recorded blinking video ---
-for example from a classroom optical setup or an LED source --- and have
+\paragraph{Longer project (1-2 weeks).} Add a recorded video of physical blinking sources (for example, from a classroom optical setup or an LED source) and have
 students compare reconstructions of simulated and real data.
 
 \paragraph{Learning goals.}
@@ -772,19 +771,17 @@ students compare reconstructions of simulated and real data.
         reconstruction.
   \item Explore how blur width, noise, blinker density, and overlap affect the
         result.
-  \item Treat physical calibration as optional --- the core workflow is
-        pixel-first.
+  \item Treat physical calibration as optional; the core workflow uses pixel coordinates.
 \end{itemize}
 
 \paragraph{Suggested parameter sweeps.} Have students vary one setting at a time
-and predict the effect before running: \ui{sigma\_px} (blur), \ui{Read noise},
+and predict its effect before running the simulation: \ui{sigma\_px} (blur), \ui{Read noise},
 \ui{Max blinkers/frame} (density and overlap), and \ui{Frames} (sampling). The
 companion \emph{Theory} document gives the physics behind each of these.
 
 \vfill
 \noindent\rule{\linewidth}{0.4pt}\\[2pt]
-{\footnotesize The science behind \app{} --- diffraction, point-spread
-functions, blinking, localization, and precision --- is explained in the
+{\footnotesize The science behind \app{} (diffraction, point-spread functions, blinking, localization, and precision) is explained in the
 companion document \emph{\app{} Theory Notes}.}
 
 \end{document}

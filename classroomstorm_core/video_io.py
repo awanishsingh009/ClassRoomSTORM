@@ -30,21 +30,27 @@ def read_video_info(path: str | Path) -> dict:
 
 
 def read_video_frames(path: str | Path, max_frames: int | None = None) -> List[np.ndarray]:
+    if max_frames is not None and (int(max_frames) != max_frames or max_frames <= 0):
+        raise ValueError("max_frames must be a positive integer or None")
     cv2 = require_cv2()
     cap = cv2.VideoCapture(str(path))
     if not cap.isOpened():
         raise RuntimeError(f"Could not open video: {path}")
     frames: List[np.ndarray] = []
-    while True:
-        ok, frame = cap.read()
-        if not ok:
-            break
-        if frame.ndim == 3:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        frames.append(frame.astype(float))
-        if max_frames is not None and len(frames) >= int(max_frames):
-            break
-    cap.release()
+    try:
+        while True:
+            ok, frame = cap.read()
+            if not ok:
+                break
+            if frame.ndim == 3:
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            frames.append(frame)
+            if max_frames is not None and len(frames) >= int(max_frames):
+                break
+    finally:
+        cap.release()
+    if not frames:
+        raise ValueError(f"Video contains no decodable frames: {path}")
     return frames
 
 
@@ -59,9 +65,11 @@ def write_mp4(path: str | Path, frames_uint8: Iterable[np.ndarray], fps: float =
     writer = cv2.VideoWriter(str(target), cv2.VideoWriter_fourcc(*"mp4v"), float(fps), (width, height), isColor=False)
     if not writer.isOpened():
         raise RuntimeError(f"Could not create video writer: {target}")
-    for frame in frames:
-        if frame.shape[:2] != (height, width):
-            raise ValueError("all frames must have the same shape")
-        writer.write(frame)
-    writer.release()
+    try:
+        for frame in frames:
+            if frame.shape[:2] != (height, width):
+                raise ValueError("all frames must have the same shape")
+            writer.write(frame)
+    finally:
+        writer.release()
     return target

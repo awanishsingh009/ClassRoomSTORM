@@ -1,5 +1,5 @@
 """
-ClassRoomSTORM Reconstruction V1.
+ClassRoomSTORM Reconstruction V1.2.
 
 This script is the student-facing reconstruction app. It reconstructs from the
 video itself first. Virtual truth data, when present, is used only after
@@ -9,6 +9,7 @@ reconstruction through a comparison step.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import datetime as _dt
 import subprocess
 import sys
@@ -32,13 +33,13 @@ from plotting import (
 )
 from pipeline_report import generate_pipeline_report
 from profile_tools import linked_line_profiles, linked_profile_series
-from reconstruction import reconstruct_frames, write_localizations_csv, write_summary_json
-from truth_comparison import nearest_truth_errors, read_truth_csv
+from reconstruction import normalize_crop, reconstruct_frames, write_localizations_csv, write_summary_json
+from truth_comparison import match_localizations_to_truth, read_truth_csv
+from version import APP_VERSION
 from video_io import read_video_frames, read_video_info
 
 
 APP_NAME = "ClassRoomSTORM Reconstruction"
-APP_VERSION = "V1.1"
 AUTHOR_CREDIT = "Developed by Dr. Awanish Pratap Singh"
 AUTHOR_AFFILIATION = "Institute of Biomedical Optics, University of Lübeck"
 
@@ -106,15 +107,10 @@ def studio_launcher_script() -> Path:
 
 def clip_crop_to_shape(crop: tuple[int, int, int, int], shape: tuple[int, int]) -> tuple[int, int, int, int] | None:
     """Clip a requested crop to a frame shape and return None when it is empty."""
-    x, y, width, height = [int(v) for v in crop]
-    frame_h, frame_w = [int(v) for v in shape[:2]]
-    x0 = max(0, min(frame_w, x))
-    y0 = max(0, min(frame_h, y))
-    x1 = max(x0, min(frame_w, x0 + max(0, width)))
-    y1 = max(y0, min(frame_h, y0 + max(0, height)))
-    if x1 <= x0 or y1 <= y0:
+    try:
+        return normalize_crop(crop, shape)
+    except ValueError:
         return None
-    return (x0, y0, x1 - x0, y1 - y0)
 
 
 def clamp_preview_zoom(value: float) -> float:
@@ -208,10 +204,19 @@ def run_reconstruction(
     crop: tuple[int, int, int, int] | None = None,
     processing_backend: str = "serial",
     worker_count: int | None = None,
+    pixel_size: float | None = None,
+    unit: str = "px",
+    background_mode: str = "none",
+    truth_radius_px: float = 2.0,
 ) -> dict:
     video = Path(video_path)
     out = Path(output_dir)
-    out.mkdir(parents=True, exist_ok=True)
+    if not video.is_file():
+        raise ValueError(f"Video not found: {video}")
+    if out.exists() and any(out.iterdir()):
+        raise ValueError("Output folder is not empty. Choose a new folder to preserve previous results.")
+    if not np.isfinite(truth_radius_px) or truth_radius_px <= 0:
+        raise ValueError("Truth matching radius must be finite and positive")
     frames = read_video_frames(video, max_frames=max_frames)
     result = reconstruct_frames(
         frames,
@@ -220,8 +225,12 @@ def run_reconstruction(
         crop=crop,
         processing_backend=processing_backend,
         worker_count=worker_count,
+        pixel_size=pixel_size,
+        unit=unit,
+        background_mode=background_mode,
     )
 
+    out.mkdir(parents=True, exist_ok=True)
     write_localizations_csv(out / "localizations.csv", result.localizations)
     np.save(out / "raw_mean.npy", result.raw_mean)
     np.save(out / "superres.npy", result.superres)
@@ -244,28 +253,36 @@ def run_reconstruction(
             "software": f"{APP_NAME} {APP_VERSION}",
             "video_name": video.name,
             "video_path": str(video),
-            "pixel_mode": "pixels",
-            "render_kernel": "Gaussian visualization",
+            "pixel_mode": "calibrated" if pixel_size is not None else "pixels",
+            "render_kernel": "Fractional-coordinate Gaussian visualization (unit integral)",
             "cumulative_frames": cumulative_frames or "auto:10%,30%,60%,100%",
             "crop_enabled": crop is not None,
             "truth_used_for_reconstruction": False,
         }
     )
+    with video.open("rb") as source:
+        summary["input_sha256"] = hashlib.file_digest(source, "sha256").hexdigest() if hasattr(hashlib, "file_digest") else _sha256_stream(source)
 
     truth_path = video.parent / "truth.csv"
     if compare_truth and truth_path.exists():
         truth_rows = read_truth_csv(truth_path)
-        errors = nearest_truth_errors(result.localizations, truth_rows)
-        if errors:
-            summary["truth_comparison"] = {
-                "truth_file": str(truth_path),
-                "matched_localizations": len(errors),
-                "mean_nearest_truth_error_px": sum(errors) / len(errors),
-                "max_nearest_truth_error_px": max(errors),
-            }
+        summary["truth_comparison"] = match_localizations_to_truth(
+            result.localizations, truth_rows, truth_radius_px,
+            frames_processed=summary["frames_processed"], crop=summary.get("crop"),
+        )
+        summary["truth_comparison"]["truth_file"] = str(truth_path)
+    elif compare_truth:
+        summary["truth_comparison_note"] = "No truth.csv exists next to the input video."
     generate_pipeline_report(out, summary)
     write_summary_json(out / "summary.json", summary)
     return summary
+
+
+def _sha256_stream(source) -> str:
+    digest = hashlib.sha256()
+    for chunk in iter(lambda: source.read(1024 * 1024), b""):
+        digest.update(chunk)
+    return digest.hexdigest()
 
 
 def run_gui() -> int:
@@ -274,6 +291,20 @@ def run_gui() -> int:
     except Exception as exc:
         raise RuntimeError("PySide6 is not installed. Install PySide6 to use the v7 desktop GUI.") from exc
     from simulation import normalize_to_uint8
+
+    class ReconstructionWorker(QtCore.QThread):
+        completed = QtCore.Signal(dict)
+        failed = QtCore.Signal(str)
+
+        def __init__(self, kwargs, parent):
+            super().__init__(parent)
+            self.kwargs = kwargs
+
+        def run(self):
+            try:
+                self.completed.emit(run_reconstruction(**self.kwargs))
+            except Exception as exc:
+                self.failed.emit(str(exc))
 
     class LinkedProfileWidget(QtWidgets.QWidget):
         def __init__(self):
@@ -613,6 +644,8 @@ def run_gui() -> int:
                 spin.valueChanged.connect(self.update_crop_preview)
             self.compare = QtWidgets.QCheckBox("Compare with truth after run")
             run = QtWidgets.QPushButton("Run Reconstruction")
+            self.run_button = run
+            self.reconstruction_worker = None
             run.clicked.connect(self.run_reconstruction_clicked)
             self.status = QtWidgets.QLabel("Ready")
             self.active_result_section = "main"
@@ -708,6 +741,9 @@ def run_gui() -> int:
             self.addToolBar(QtCore.Qt.ToolBarArea.TopToolBarArea, toolbar)
 
         def back_to_studio(self):
+            if self.reconstruction_worker is not None and self.reconstruction_worker.isRunning():
+                self.status.setText("Wait for reconstruction to finish before returning to Studio.")
+                return
             script = studio_launcher_script()
             if not script.exists():
                 QtWidgets.QMessageBox.warning(self, APP_NAME, f"Studio launcher not found:\n{script}")
@@ -740,17 +776,21 @@ def run_gui() -> int:
         def _calibration_page(self):
             page = QtWidgets.QWidget()
             form = QtWidgets.QFormLayout(page)
-            mode = QtWidgets.QComboBox()
-            mode.addItems(["Pixels only", "Manual calibration"])
-            unit = QtWidgets.QLineEdit("px")
-            scale = QtWidgets.QDoubleSpinBox()
-            scale.setRange(0, 1e12)
-            scale.setDecimals(6)
-            scale.setValue(1.0)
-            form.addRow("Mode", mode)
-            form.addRow("Unit label", unit)
-            form.addRow("Unit per pixel", scale)
-            note = QtWidgets.QLabel("MVP note: reconstruction currently runs pixel-first. Calibration is recorded in design but not applied yet.")
+            self.calibration_mode = QtWidgets.QComboBox()
+            self.calibration_mode.addItems(["Pixels only", "Manual calibration"])
+            self.calibration_unit = QtWidgets.QLineEdit("mm")
+            self.calibration_scale = QtWidgets.QDoubleSpinBox()
+            self.calibration_scale.setDecimals(9)
+            self.calibration_scale.setRange(1e-9, 1e12)
+            self.calibration_scale.setValue(1.0)
+            self.calibration_scale.setEnabled(False)
+            self.calibration_unit.setEnabled(False)
+            self.calibration_mode.currentIndexChanged.connect(lambda i: self.calibration_scale.setEnabled(i == 1))
+            self.calibration_mode.currentIndexChanged.connect(lambda i: self.calibration_unit.setEnabled(i == 1))
+            form.addRow("Mode", self.calibration_mode)
+            form.addRow("Unit label", self.calibration_unit)
+            form.addRow("Unit per pixel", self.calibration_scale)
+            note = QtWidgets.QLabel("Manual calibration adds x_calibrated and y_calibrated columns to the CSV, measured from the original frame origin. Images and line profiles retain pixel axes. Calibration does not estimate localization uncertainty.")
             note.setWordWrap(True)
             form.addRow(note)
             return page
@@ -758,10 +798,13 @@ def run_gui() -> int:
         def _preprocess_page(self):
             page = QtWidgets.QWidget()
             form = QtWidgets.QFormLayout(page)
-            reject = QtWidgets.QCheckBox("Reject bad frames")
-            bg = QtWidgets.QCheckBox("Background correction")
-            reject.setChecked(True)
-            bg.setChecked(True)
+            self.background_correction = QtWidgets.QCheckBox("Subtract frame median background")
+            self.background_correction.setChecked(False)
+            self.threshold_quantile = QtWidgets.QDoubleSpinBox()
+            self.threshold_quantile.setDecimals(4)
+            self.threshold_quantile.setRange(0.0001, 1.0)
+            self.threshold_quantile.setSingleStep(0.001)
+            self.threshold_quantile.setValue(0.995)
             form.addRow(self.crop_enable)
             form.addRow("Crop x", self.crop_x)
             form.addRow("Crop y", self.crop_y)
@@ -777,9 +820,9 @@ def run_gui() -> int:
             crop_buttons_layout.addWidget(overlay)
             crop_buttons_layout.addWidget(preview_crop)
             form.addRow(crop_buttons)
-            form.addRow(reject)
-            form.addRow(bg)
-            note = QtWidgets.QLabel("Enable crop, adjust x/y/width/height, and the rectangle appears on the loaded frame. Bad-frame rejection/background correction are placeholders for the next preprocessing slice.")
+            form.addRow("Threshold quantile", self.threshold_quantile)
+            form.addRow(self.background_correction)
+            note = QtWidgets.QLabel("Blank or constant frames produce no localizations. Optional background subtraction uses the median of each cropped frame and clips negative signal to zero; this assumes sparse bright emitters. The raw mean remains uncorrected.")
             note.setWordWrap(True)
             form.addRow(note)
             return page
@@ -810,6 +853,11 @@ def run_gui() -> int:
             form = QtWidgets.QFormLayout(page)
             form.addRow("Cumulative frames", self.cumulative)
             form.addRow(self.compare)
+            self.truth_radius = QtWidgets.QDoubleSpinBox()
+            self.truth_radius.setRange(0.001, 10000)
+            self.truth_radius.setDecimals(3)
+            self.truth_radius.setValue(2.0)
+            form.addRow("Truth match radius (px)", self.truth_radius)
             form.addRow(self.allow_previous_results)
             load_results = QtWidgets.QPushButton("Load Previous Result Folder")
             load_results.clicked.connect(self.browse_result_folder)
@@ -1204,11 +1252,13 @@ def run_gui() -> int:
 
         @QtCore.Slot()
         def run_reconstruction_clicked(self):
+            if self.reconstruction_worker is not None and self.reconstruction_worker.isRunning():
+                return
             try:
                 max_frames = int(self.max_frames.value()) or None
-                summary = run_reconstruction(
-                    self.video.text(),
-                    self.out.text(),
+                kwargs = dict(
+                    video_path=self.video.text(),
+                    output_dir=self.out.text(),
                     max_frames=max_frames,
                     blinker_mode=self.mode.currentText(),
                     compare_truth=self.compare.isChecked(),
@@ -1216,17 +1266,55 @@ def run_gui() -> int:
                     crop=self.current_crop(),
                     processing_backend=self.current_processing_backend(),
                     worker_count=int(self.worker_count.value()) or None,
+                    threshold_quantile=self.threshold_quantile.value(),
+                    pixel_size=self.calibration_scale.value() if self.calibration_mode.currentIndex() == 1 else None,
+                    unit=self.calibration_unit.text(),
+                    background_mode="frame_median" if self.background_correction.isChecked() else "none",
+                    truth_radius_px=self.truth_radius.value(),
                 )
-                self.status.setText(f"Saved outputs in {self.out.text()}")
-                self.info.setText(str(summary))
-                self.log.append(f"Saved outputs in {self.out.text()}")
-                self.current_run_results_ready = True
-                self.steps.setCurrentRow(5)
-                self.active_result_section = "main"
-                self.refresh_result_browser(show_first=True)
+                self.pages.setEnabled(False)
+                self.back_to_studio_button.setEnabled(False)
+                self.raw_video_timer.stop()
+                self.status.setText("Reconstructing and exporting figures...")
+                self.log.append("Reconstruction started. The window remains responsive.")
+                self.reconstruction_worker = ReconstructionWorker(kwargs, self)
+                self.reconstruction_worker.completed.connect(self.reconstruction_completed)
+                self.reconstruction_worker.failed.connect(self.reconstruction_failed)
+                self.reconstruction_worker.finished.connect(self.reconstruction_finished)
+                self.reconstruction_worker.start()
             except Exception as exc:
-                self.status.setText(str(exc))
-                self.log.append(f"Run error: {exc}")
+                self.reconstruction_failed(str(exc))
+                self.reconstruction_finished()
+
+        @QtCore.Slot(dict)
+        def reconstruction_completed(self, summary):
+            self.info.setText(str(summary))
+            self.log.append(f"Saved outputs in {self.out.text()}")
+            self.current_run_results_ready = True
+            self.steps.setCurrentRow(5)
+            self.active_result_section = "main"
+            self.refresh_result_browser(show_first=True)
+            self.status.setText(f"Saved outputs in {self.out.text()}")
+
+        @QtCore.Slot(str)
+        def reconstruction_failed(self, message):
+            self.status.setText(message)
+            self.log.append(f"Run error: {message}")
+
+        @QtCore.Slot()
+        def reconstruction_finished(self):
+            self.pages.setEnabled(True)
+            self.back_to_studio_button.setEnabled(True)
+            if self.reconstruction_worker is not None:
+                self.reconstruction_worker.deleteLater()
+                self.reconstruction_worker = None
+
+        def closeEvent(self, event):
+            if self.reconstruction_worker is not None and self.reconstruction_worker.isRunning():
+                self.status.setText("Reconstruction is running. Close the window after it finishes.")
+                event.ignore()
+            else:
+                event.accept()
 
         @QtCore.Slot()
         def refresh_result_browser(self, show_first=True):
@@ -1319,7 +1407,7 @@ def run_gui() -> int:
         def update_processing_dependency_note(self):
             self.processing_dependency_note.setText(gpu_dependency_guidance(self.current_processing_backend()))
 
-    app = QtWidgets.QApplication(sys.argv)
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
     window = Window()
     window.show()
     return app.exec()
@@ -1339,6 +1427,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--cumulative-frames", default="", help="Optional four comma-separated cumulative frame values, e.g. 50,150,300,665.")
     parser.add_argument("--processing-backend", choices=processing_backend_options(), default="serial")
     parser.add_argument("--workers", type=int, default=0, help="Worker count for CPU parallel processing. Use 0 for auto.")
+    parser.add_argument("--pixel-size", type=float, default=None, help="Physical units per camera pixel; calibrated CSV coordinates use the original frame origin.")
+    parser.add_argument("--unit", default="px", help="Unit label for calibrated CSV coordinates, e.g. mm or nm.")
+    parser.add_argument("--background-mode", choices=["none", "frame_median"], default="none")
+    parser.add_argument("--truth-radius-px", type=float, default=2.0)
     return parser.parse_args(argv)
 
 
@@ -1379,12 +1471,17 @@ def main(argv: list[str] | None = None) -> int:
             crop=parse_crop(args.crop),
             processing_backend=args.processing_backend,
             worker_count=args.workers or None,
+            pixel_size=args.pixel_size,
+            unit=args.unit,
+            background_mode=args.background_mode,
+            truth_radius_px=args.truth_radius_px,
         )
         print(f"Saved reconstruction outputs to {output_dir}")
         print(f"Frames processed: {summary['frames_processed']}")
         print(f"Localizations: {summary['localizations']}")
         if "truth_comparison" in summary:
-            print(f"Mean nearest truth error px: {summary['truth_comparison']['mean_nearest_truth_error_px']:.3f}")
+            truth = summary["truth_comparison"]
+            print(f"Truth comparison: precision={truth['precision']}, recall={truth['recall']}, F1={truth['f1']}")
         return 0
     return run_gui()
 

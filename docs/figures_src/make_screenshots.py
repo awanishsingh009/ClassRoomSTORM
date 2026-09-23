@@ -4,7 +4,7 @@ Help document.
 
 The native Windows Qt platform is used so system fonts render correctly (the
 'offscreen' plugin renders text as missing-glyph boxes). Each window is built
-and grabbed with QWidget.grab(); windows appear only briefly. Because every
+and grabbed with QWidget.grab(); windows are kept off the desktop while their native widgets are rendered. Because every
 workflow app creates its own QApplication, each window is captured in a
 separate subprocess.
 
@@ -41,6 +41,8 @@ def capture_launcher():
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
     win = studio.StudioWindow()
     win.resize(1200, 730)
+    from PySide6.QtCore import Qt
+    win.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen, True)
     win.show()
     _pump(app)
     try:
@@ -80,6 +82,12 @@ def capture_via_run_gui(module_name, out_name, nav_row=None):
 
     QtWidgets.QApplication.exec = fake_exec
     QtWidgets.QApplication.exec_ = fake_exec
+    from PySide6.QtCore import Qt
+    native_show = QtWidgets.QWidget.show
+    def hidden_show(widget):
+        widget.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen, True)
+        return native_show(widget)
+    QtWidgets.QWidget.show = hidden_show
     mod.run_gui()
     print(("OK " if state["saved"] else "FAILED ") + out_name)
 

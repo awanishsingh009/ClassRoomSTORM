@@ -37,3 +37,18 @@ results/virtual_experiments/*
 
 # QA artefacts: kept on disk, not tracked
 qa/
+
+# Local history and generated developer intermediates
+backups/
+docs/figures_src/build/
+docs/figures_src/Scientific_Figure_Review.tex
+docs/figures_src/verification.json
+dist/
+releases/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.DS_Store
+Thumbs.db

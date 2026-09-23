@@ -1,0 +1,298 @@
+{
+  "T2_rayleigh": [
+    {
+      "document": "Theory notes",
+      "number": 1,
+      "label": "fig:rayleigh",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Theory.tex",
+      "asset": "T2_rayleigh",
+      "width_mm": 162.0
+    },
+    {
+      "document": "Manuscript",
+      "number": 2,
+      "label": "fig:rayleigh",
+      "source": "manuscript_writing/ClassRoomSTORM_AJP.tex",
+      "asset": "P2_rayleigh",
+      "width_mm": 162.0
+    }
+  ],
+  "T1_airy_gaussian": [
+    {
+      "document": "Theory notes",
+      "number": 2,
+      "label": "fig:airy",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Theory.tex",
+      "asset": "T1_airy_gaussian",
+      "width_mm": 162.0
+    },
+    {
+      "document": "Manuscript",
+      "number": 1,
+      "label": "fig:airy-vs-gauss",
+      "source": "manuscript_writing/ClassRoomSTORM_AJP.tex",
+      "asset": "P1_airy_gaussian",
+      "width_mm": 162.0
+    }
+  ],
+  "T3_image_formation": [
+    {
+      "document": "Theory notes",
+      "number": 3,
+      "label": "fig:formation",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Theory.tex",
+      "asset": "T3_image_formation",
+      "width_mm": 162.0
+    },
+    {
+      "document": "Manuscript",
+      "number": 3,
+      "label": "fig:convolution",
+      "source": "manuscript_writing/ClassRoomSTORM_AJP.tex",
+      "asset": "P4_image_formation",
+      "width_mm": 162.0
+    }
+  ],
+  "T5_poisson_noise": [
+    {
+      "document": "Theory notes",
+      "number": 4,
+      "label": "fig:noise",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Theory.tex",
+      "asset": "T5_poisson_noise",
+      "width_mm": 162.0
+    },
+    {
+      "document": "Manuscript",
+      "number": 9,
+      "label": "fig:single",
+      "source": "manuscript_writing/ClassRoomSTORM_AJP.tex",
+      "asset": "P9_repeatability",
+      "width_mm": 162.0
+    }
+  ],
+  "T4_blinking": [
+    {
+      "document": "Theory notes",
+      "number": 5,
+      "label": "fig:blinking",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Theory.tex",
+      "asset": "T4_blinking",
+      "width_mm": 145.8
+    }
+  ],
+  "T7_centroid": [
+    {
+      "document": "Theory notes",
+      "number": 6,
+      "label": "fig:centroid",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Theory.tex",
+      "asset": "T7_centroid",
+      "width_mm": 113.39999999999999
+    }
+  ],
+  "T6_precision_vs_photons": [
+    {
+      "document": "Theory notes",
+      "number": 7,
+      "label": "fig:precision",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Theory.tex",
+      "asset": "T6_precision_vs_photons",
+      "width_mm": 113.39999999999999
+    },
+    {
+      "document": "Manuscript",
+      "number": 4,
+      "label": "fig:precision-scaling",
+      "source": "manuscript_writing/ClassRoomSTORM_AJP.tex",
+      "asset": "P5_precision",
+      "width_mm": 113.4
+    }
+  ],
+  "T8_precision_accuracy": [
+    {
+      "document": "Theory notes",
+      "number": 8,
+      "label": "fig:precacc",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Theory.tex",
+      "asset": "T8_precision_accuracy",
+      "width_mm": 116.64
+    }
+  ],
+  "T9_nyquist": [
+    {
+      "document": "Theory notes",
+      "number": 9,
+      "label": "fig:nyquist",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Theory.tex",
+      "asset": "T9_nyquist",
+      "width_mm": 139.32
+    }
+  ],
+  "T10_pipeline": [
+    {
+      "document": "Theory notes",
+      "number": 10,
+      "label": "fig:pipeline",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Theory.tex",
+      "asset": "T10_pipeline",
+      "width_mm": 162.0
+    },
+    {
+      "document": "Manuscript",
+      "number": 7,
+      "label": "fig:pipeline",
+      "source": "manuscript_writing/ClassRoomSTORM_AJP.tex",
+      "asset": "P7_pipeline",
+      "width_mm": 162.0
+    }
+  ],
+  "T11_raw_vs_reconstruction": [
+    {
+      "document": "Theory notes",
+      "number": 11,
+      "label": "fig:rawvssr",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Theory.tex",
+      "asset": "T11_raw_vs_reconstruction",
+      "width_mm": 162.0
+    },
+    {
+      "document": "Manuscript",
+      "number": 8,
+      "label": "fig:virtual-result",
+      "source": "manuscript_writing/ClassRoomSTORM_AJP.tex",
+      "asset": "P8_synthetic_result",
+      "width_mm": 162.0
+    }
+  ],
+  "H1_concept_loop": [
+    {
+      "document": "User guide",
+      "number": 1,
+      "label": "fig:loop",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Help.tex",
+      "asset": "H1_concept_loop",
+      "width_mm": 162.0
+    }
+  ],
+  "H2_launcher_screenshot": [
+    {
+      "document": "User guide",
+      "number": 2,
+      "label": "fig:launcher",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Help.tex",
+      "asset": "H2_launcher_screenshot",
+      "width_mm": 145.8
+    }
+  ],
+  "H3_quickstart_montage": [
+    {
+      "document": "User guide",
+      "number": 3,
+      "label": "fig:quickstart",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Help.tex",
+      "asset": "H3_quickstart_montage",
+      "width_mm": 162.0
+    }
+  ],
+  "H4_pattern_preview": [
+    {
+      "document": "User guide",
+      "number": 4,
+      "label": "fig:ve-pattern",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Help.tex",
+      "asset": "H4_pattern_preview",
+      "width_mm": 129.6
+    }
+  ],
+  "H5_blinking_frame": [
+    {
+      "document": "User guide",
+      "number": 5,
+      "label": "fig:ve-frame",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Help.tex",
+      "asset": "H5_blinking_frame",
+      "width_mm": 113.39999999999999
+    }
+  ],
+  "H6_reconstruction_load_crop": [
+    {
+      "document": "User guide",
+      "number": 6,
+      "label": "fig:rc-load",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Help.tex",
+      "asset": "H6_reconstruction_load_crop",
+      "width_mm": 162.0
+    }
+  ],
+  "H7_results_browser": [
+    {
+      "document": "User guide",
+      "number": 7,
+      "label": "fig:rc-results",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Help.tex",
+      "asset": "H7_results_browser",
+      "width_mm": 162.0
+    }
+  ],
+  "H8_linked_profile": [
+    {
+      "document": "User guide",
+      "number": 8,
+      "label": "fig:profiles",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Help.tex",
+      "asset": "H8_linked_profile",
+      "width_mm": 162.0
+    }
+  ],
+  "H9_output_map": [
+    {
+      "document": "User guide",
+      "number": 9,
+      "label": "fig:outputs",
+      "source": "ClassRoomSTORM_V1/docs/latex/ClassRoomSTORM_Help.tex",
+      "asset": "H9_output_map",
+      "width_mm": 162.0
+    }
+  ],
+  "P6_apparatus": [
+    {
+      "document": "Manuscript",
+      "number": 5,
+      "label": "fig:apparatus",
+      "source": "manuscript_writing/ClassRoomSTORM_AJP.tex",
+      "asset": "P6_apparatus",
+      "width_mm": 162.0
+    }
+  ],
+  "P3_model_mismatch": [
+    {
+      "document": "Manuscript",
+      "number": 6,
+      "label": "fig:model-adequacy",
+      "source": "manuscript_writing/ClassRoomSTORM_AJP.tex",
+      "asset": "P3_model_mismatch",
+      "width_mm": 162.0
+    }
+  ],
+  "P10_position_validation": [
+    {
+      "document": "Manuscript",
+      "number": 10,
+      "label": "fig:double",
+      "source": "manuscript_writing/ClassRoomSTORM_AJP.tex",
+      "asset": "P10_position_validation",
+      "width_mm": 162.0
+    }
+  ],
+  "P11_rendering_sensitivity": [
+    {
+      "document": "Manuscript",
+      "number": 11,
+      "label": "fig:ablations",
+      "source": "manuscript_writing/ClassRoomSTORM_AJP.tex",
+      "asset": "P11_rendering_sensitivity",
+      "width_mm": 162.0
+    }
+  ]
+}

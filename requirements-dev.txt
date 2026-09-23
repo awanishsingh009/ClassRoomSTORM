@@ -1,0 +1,4 @@
+# Tests include the analytical figure checks as well as application tests.
+-r requirements.txt
+pytest>=8
+scipy>=1.11

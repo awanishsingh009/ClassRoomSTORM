@@ -33,7 +33,7 @@ def _centroid_localization(frame: np.ndarray, mask: np.ndarray) -> tuple[float, 
 
 def _localize_single(frame: np.ndarray, threshold_quantile: float, frame_index: int) -> dict | None:
     arr = np.asarray(frame, dtype=float)
-    if arr.size == 0 or not np.isfinite(arr).any():
+    if arr.size == 0 or float(arr.max()) <= max(0.0, float(arr.min())):
         return None
     threshold = float(np.quantile(arr, float(threshold_quantile)))
     mask = arr >= threshold
@@ -95,6 +95,8 @@ def _component_localizations(frame: np.ndarray, threshold_quantile: float, frame
 
 def _component_localizations_from_mask(frame: np.ndarray, binary_mask: np.ndarray, frame_index: int, max_emitters: int = 20) -> list[dict]:
     arr = np.asarray(frame, dtype=float)
+    if float(arr.max()) <= max(0.0, float(arr.min())):
+        return []
     mask = np.asarray(binary_mask, dtype=bool)
     components = _connected_components(mask)
     ranked = []
@@ -167,7 +169,7 @@ def _resolve_processing_backend(
 ) -> tuple[str, int, str | None, str | None]:
     requested = str(requested_backend or "serial").lower().replace(" ", "_").replace("-", "_")
     workers = int(worker_count) if worker_count is not None and int(worker_count) > 0 else _default_worker_count()
-    workers = max(1, workers)
+    workers = max(1, min(workers, int(frame_count)))
     if requested in {"auto_cpu_gpu_acceleration", "auto_cpu_gpu_accelerated", "cpu_gpu_acceleration"}:
         fallback = "cpu_parallel" if workers > 1 and int(frame_count) > 1 else "serial"
         available, detail = _torch_cuda_status()
@@ -256,7 +258,8 @@ def _localize_frames_gpu_single(
         tensor = torch.as_tensor(stack, device=device)
         flat = tensor.reshape(tensor.shape[0], -1)
         thresholds = torch.quantile(flat, q, dim=1).reshape(-1, 1, 1)
-        mask = tensor >= thresholds
+        has_signal = (flat.max(dim=1).values > flat.min(dim=1).values).reshape(-1, 1, 1)
+        mask = (tensor >= thresholds) & has_signal
         weights = tensor * mask
         totals = weights.sum(dim=(1, 2))
         x_vals = (weights * xx).sum(dim=(1, 2)) / torch.clamp(totals, min=1e-12)
@@ -314,17 +317,24 @@ def _localize_frames_gpu_threshold_cpu_components(
     return localizations
 
 
+def normalize_crop(crop: tuple[int, int, int, int], shape: tuple[int, int]) -> tuple[int, int, int, int]:
+    """Intersect an integer crop rectangle with the original camera frame."""
+    if len(crop) != 4 or any(not np.isfinite(v) or int(v) != v for v in crop):
+        raise ValueError("crop must contain four finite integers: x, y, width, height")
+    x, y, width, height = map(int, crop)
+    h, w = shape
+    x0, y0 = max(0, x), max(0, y)
+    x1, y1 = min(w, x + width), min(h, y + height)
+    if x1 <= x0 or y1 <= y0:
+        raise ValueError("crop region is empty")
+    return x0, y0, x1 - x0, y1 - y0
+
+
 def _apply_crop(frame: np.ndarray, crop: tuple[int, int, int, int] | None) -> np.ndarray:
     if crop is None:
         return frame
-    x, y, width, height = [int(v) for v in crop]
-    h, w = frame.shape
-    x0 = max(0, min(w, x))
-    y0 = max(0, min(h, y))
-    x1 = max(x0, min(w, x0 + max(0, width)))
-    y1 = max(y0, min(h, y0 + max(0, height)))
-    if x1 <= x0 or y1 <= y0:
-        raise ValueError("crop region is empty")
+    x0, y0, width, height = normalize_crop(crop, frame.shape)
+    x1, y1 = x0 + width, y0 + height
     return frame[y0:y1, x0:x1]
 
 
@@ -340,28 +350,26 @@ def render_count_image(localizations: Sequence[dict], shape: tuple[int, int]) ->
 
 
 def render_localization_image(localizations: Sequence[dict], shape: tuple[int, int], sigma_px: float = 1.5) -> np.ndarray:
-    """Render localizations as small Gaussian spots for visible inspection."""
+    """Sample Gaussian spots at fractional coordinates on the camera grid.
+
+    Each localization contributes one count, including at image boundaries.
+    The display width is not an estimate of uncertainty or optical resolution.
+    """
     image = np.zeros(shape, dtype=float)
     height, width = shape
-    sigma = max(0.25, float(sigma_px))
+    sigma = float(sigma_px)
+    if not np.isfinite(sigma) or sigma <= 0:
+        raise ValueError("render sigma must be finite and positive")
     radius = max(1, int(np.ceil(4 * sigma)))
-    yy, xx = np.mgrid[-radius:radius + 1, -radius:radius + 1]
-    kernel = np.exp(-0.5 * ((xx / sigma) ** 2 + (yy / sigma) ** 2))
-    kernel /= max(float(kernel.max()), 1e-12)
     for loc in localizations:
-        x = int(round(float(loc["x_px"])))
-        y = int(round(float(loc["y_px"])))
+        x, y = float(loc["x_px"]), float(loc["y_px"])
         if not (0 <= x < width and 0 <= y < height):
             continue
-        y0 = max(0, y - radius)
-        y1 = min(height, y + radius + 1)
-        x0 = max(0, x - radius)
-        x1 = min(width, x + radius + 1)
-        ky0 = y0 - (y - radius)
-        ky1 = ky0 + (y1 - y0)
-        kx0 = x0 - (x - radius)
-        kx1 = kx0 + (x1 - x0)
-        image[y0:y1, x0:x1] += kernel[ky0:ky1, kx0:kx1]
+        y0, y1 = max(0, int(y) - radius), min(height, int(y) + radius + 2)
+        x0, x1 = max(0, int(x) - radius), min(width, int(x) + radius + 2)
+        yy, xx = np.mgrid[y0:y1, x0:x1]
+        kernel = np.exp(-0.5 * (((xx - x) / sigma) ** 2 + ((yy - y) / sigma) ** 2))
+        image[y0:y1, x0:x1] += kernel / kernel.sum()
     return image
 
 
@@ -373,8 +381,39 @@ def reconstruct_frames(
     crop: tuple[int, int, int, int] | None = None,
     processing_backend: str = "serial",
     worker_count: int | None = None,
+    pixel_size: float | None = None,
+    unit: str = "px",
+    background_mode: str = "none",
 ) -> ReconstructionResult:
-    frame_list = [_apply_crop(np.asarray(frame, dtype=float), crop) for frame in frames]
+    if not np.isfinite(threshold_quantile) or not 0 < threshold_quantile <= 1:
+        raise ValueError("threshold_quantile must be finite and in (0, 1]")
+    if pixel_size is not None and (not np.isfinite(pixel_size) or pixel_size <= 0):
+        raise ValueError("pixel_size must be finite and positive")
+    if not str(unit).strip():
+        raise ValueError("calibration unit must not be empty")
+    if background_mode not in {"none", "frame_median"}:
+        raise ValueError("background_mode must be none or frame_median")
+    frame_list = []
+    input_shape = None
+    effective_crop = None
+    raw_sum = None
+    backgrounds = []
+    for index, frame in enumerate(frames):
+        arr = np.asarray(frame)
+        if arr.ndim != 2 or not arr.size or not np.isfinite(arr).all():
+            raise ValueError(f"frame {index} must be a nonempty, finite 2D grayscale image")
+        if input_shape is None:
+            input_shape = arr.shape
+            effective_crop = normalize_crop(crop, input_shape) if crop is not None else None
+        elif arr.shape != input_shape:
+            raise ValueError("all frames must have the same shape")
+        arr = _apply_crop(arr, effective_crop).astype(np.float32)
+        if raw_sum is None:
+            raw_sum = np.zeros(arr.shape, dtype=np.float64)
+        raw_sum += arr
+        background = float(np.median(arr)) if background_mode == "frame_median" else 0.0
+        backgrounds.append(background)
+        frame_list.append(np.maximum(arr - background, 0.0))
     if not frame_list:
         raise ValueError("at least one frame is required")
     shape = frame_list[0].shape
@@ -397,7 +436,14 @@ def reconstruct_frames(
         localizations = _localize_frames(frame_list, threshold_quantile, resolved_mode, used_backend, used_workers)
     t_localize1 = time.perf_counter()
 
-    raw_mean = np.mean(np.stack(frame_list, axis=0), axis=0)
+    x_offset, y_offset = effective_crop[:2] if effective_crop else (0, 0)
+    for loc in localizations:
+        loc["x_full_px"] = loc["x_px"] + x_offset
+        loc["y_full_px"] = loc["y_px"] + y_offset
+        if pixel_size is not None:
+            loc.update(x_calibrated=loc["x_full_px"] * pixel_size,
+                       y_calibrated=loc["y_full_px"] * pixel_size, unit=str(unit).strip())
+    raw_mean = raw_sum / len(frame_list)
     superres = render_localization_image(localizations, shape, sigma_px=1.5)
     t_done = time.perf_counter()
     summary = {
@@ -407,6 +453,12 @@ def reconstruct_frames(
         "blinker_mode_requested": requested_mode,
         "blinker_mode_resolved": resolved_mode,
         "threshold_quantile": float(threshold_quantile),
+        "background_mode": background_mode,
+        "mean_subtracted_background": float(np.mean(backgrounds)),
+        "coordinate_system": "x_px/y_px are crop-local; x_full_px/y_full_px use the original frame origin",
+        "calibration": {"applied": pixel_size is not None, "unit_per_pixel": pixel_size, "unit": str(unit).strip(), "origin": "original_frame"},
+        "rendering": {"method": "fractional_coordinate_gaussian", "sigma_px": 1.5, "grid": "camera_pixels", "normalization": "one_count_per_localization", "measured_resolution": False},
+        "frames_without_localizations": len(frame_list) - len({loc["frame"] for loc in localizations}),
         "processing_backend_requested": str(processing_backend or "serial").lower().replace(" ", "_").replace("-", "_"),
         "processing_backend_used": used_backend,
         "worker_count": int(used_workers if used_backend in {"cpu_parallel", "gpu_threshold_cpu_components"} else 1),
@@ -421,14 +473,15 @@ def reconstruct_frames(
         summary["gpu_note"] = backend_note
     if gpu_device:
         summary["gpu_device"] = gpu_device
-    if crop is not None:
-        x, y, width, height = [int(v) for v in crop]
+    if effective_crop is not None:
+        x, y, width, height = effective_crop
         summary["crop"] = {"x": x, "y": y, "width": width, "height": height}
     return ReconstructionResult(localizations=localizations, raw_mean=raw_mean, superres=superres, summary=summary)
 
 
 def write_localizations_csv(path: str | Path, localizations: Sequence[dict]) -> None:
     columns = ["frame", "emitter_id", "x_px", "y_px", "intensity", "accepted"]
+    columns += ["x_full_px", "y_full_px", "x_calibrated", "y_calibrated", "unit"]
     with open(path, "w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=columns)
         writer.writeheader()
@@ -438,4 +491,4 @@ def write_localizations_csv(path: str | Path, localizations: Sequence[dict]) -> 
 
 def write_summary_json(path: str | Path, summary: dict) -> None:
     with open(path, "w", encoding="utf-8") as handle:
-        json.dump(summary, handle, indent=2, sort_keys=True)
+        json.dump(summary, handle, indent=2, sort_keys=True, allow_nan=False)

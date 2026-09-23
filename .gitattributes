@@ -3,3 +3,6 @@
 *.command text eol=lf
 *.sh      text eol=lf
 *.bat     text eol=crlf
+
+# Matplotlib SVG path data contains harmless trailing spaces.
+*.svg whitespace=-blank-at-eol

@@ -1,0 +1,21 @@
+{
+  "seed": 20260921,
+  "frames": 600,
+  "shape": [
+    80,
+    80
+  ],
+  "sigma_psf_px": 6.0,
+  "separation_px": 8.0,
+  "signal_photons_per_active_frame": 8000.0,
+  "mean_background_counts_per_pixel": 2.0,
+  "active_emitters_per_frame": 1,
+  "threshold_quantile": 0.995,
+  "background_mode": "frame_median",
+  "data_kind": "synthetic pixel-integrated Poisson counts; direct frame input",
+  "render_sigma_px": 1.5,
+  "measured_resolution": false,
+  "mean_position_error_px": 0.3992652591108014,
+  "rmse_position_px": 0.45579961928643115,
+  "estimated_separation_px": 8.015652997698005
+}
