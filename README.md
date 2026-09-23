@@ -5,6 +5,10 @@ Current patch version: **1.2.1**. The application and manuals use the V1.2 serie
 [![Tests](https://github.com/awanishsingh009/ClassRoomSTORM/actions/workflows/tests.yml/badge.svg)](https://github.com/awanishsingh009/ClassRoomSTORM/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+**Download v1.2.1:** [Windows ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.1/ClassRoomSTORM-1.2.1-windows.zip) | [macOS ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.1/ClassRoomSTORM-1.2.1-macos.zip) | [Source ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.1/ClassRoomSTORM-1.2.1-source.zip)
+
+Students: choose your Windows or macOS package, extract the ZIP, run setup once, then open the launcher. [See installation steps and all downloads below.](#downloads)
+
 ClassRoomSTORM is a cross-platform Python teaching toolkit for stochastic blinking, localization microscopy, and super-resolution reconstruction. It connects an interactive virtual experiment with an independent video-reconstruction workflow so students can explore how blinking statistics, noise, emitter density, and localization create a reconstructed image.
 
 ![ClassRoomSTORM Studio launcher](docs/figures/help/H2_launcher_screenshot.png)
@@ -21,7 +25,7 @@ ClassRoomSTORM is a cross-platform Python teaching toolkit for stochastic blinki
 
 ClassRoomSTORM is deliberately transparent educational software. The V1.2 reconstruction uses percentile thresholding, connected components for multiple emitters, and intensity-weighted centroid localization. It does not replace research-grade SMLM packages with Gaussian/MLE fitting, drift correction, uncertainty estimation, or camera-specific calibration.
 
-## Quick Start
+## Run from source
 
 Python 3.11 is recommended. Python 3.10-3.13 is supported.
 
@@ -97,3 +101,24 @@ For a future GitHub update, follow [the release instructions](docs/RELEASE.md). 
 ## Revised scientific figures
 
 The physics-reviewed figure sources, fixed-seed data and build instructions are in [docs/figures_src/README.md](docs/figures_src/README.md). Review all scientific masters in [Scientific_Figure_Review.pdf](docs/Scientific_Figure_Review.pdf). The manuals and manuscript use these shared masters; historical artwork is preserved.
+
+## Downloads
+
+Choose one of these three **v1.2.1** downloads. Windows and macOS packages include the setup scripts, launcher, sample data, and Help and Theory PDFs.
+
+| Package | Direct download | After extracting the ZIP |
+| --- | --- | --- |
+| **Windows** | **[Download Windows ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.1/ClassRoomSTORM-1.2.1-windows.zip)** | Open `ClassRoomSTORM_V1_User_windows`, run `setup_windows.bat` once, then use `launch_studio_windows.bat`. |
+| **macOS** | **[Download macOS ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.1/ClassRoomSTORM-1.2.1-macos.zip)** | Open `ClassRoomSTORM_V1_User_macos`, run `setup_macos.command` once, then use `launch_studio_macos.command`. |
+| **Source** | **[Download source ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.1/ClassRoomSTORM-1.2.1-source.zip)** | Open `ClassRoomSTORM_Source` and follow [Run from source](#run-from-source). Includes code, tests, and editable documentation and figures. |
+
+### First installation
+
+1. Download your package and extract the whole ZIP to a folder you can write to. Keep its files together.
+2. Use Python 3.11, 3.12, or 3.13; Python 3.11 is the version tested for this release. Windows setup offers to install Python if it is missing. On macOS, install Python before running setup.
+3. Run the setup file listed above while connected to the internet and wait for **"Setup completed"**. If Windows setup installs Python, run setup again afterward. Compatible local wheels can be used for offline installation as described in `README_FIRST.txt`.
+4. Open the launcher. On later visits, use the launcher directly. Complete this first installation before the practical session.
+
+If you downloaded **Code > Download ZIP**, you have the repository source. Use the **Windows** or **macOS** links above to get the student package with setup and launch files in its main folder. For platform-specific help, open `README_FIRST.txt` in the extracted package.
+
+[Release notes and all assets](https://github.com/awanishsingh009/ClassRoomSTORM/releases/tag/v1.2.1) | [SHA-256 checksums](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.1/SHA256SUMS.txt)
