@@ -1,6 +1,6 @@
 # Preparing a GitHub update
 
-The maintained repository is the `ClassRoomSTORM_V1` directory. Version 1.2.1
+The maintained repository is the `ClassRoomSTORM_V1` directory. Version 1.2.2
 contains the reviewed manuals, scientific figures and release-preparation fixes.
 The parent research workspace and the separate manuscript are not required to run
 or test this software. Keep historical backups and student results locally.
@@ -44,7 +44,7 @@ build dependency. Check rendered pages after changing text or artwork.
 ## Create the upload bundle
 
 ```bash
-python tools/prepare_github_release.py --output ../releases/ClassRoomSTORM-1.2.1-ready
+python tools/prepare_github_release.py --output ../releases/ClassRoomSTORM-1.2.2-ready
 ```
 
 Choose a new directory each time. This creates a clean `ClassRoomSTORM_Source/`
@@ -55,8 +55,8 @@ It excludes environments, student results, Git metadata, backups and generated
 build intermediates. macOS scripts retain executable permissions in the ZIPs.
 
 ```bash
-python tools/prepare_github_release.py --validate-source ../releases/ClassRoomSTORM-1.2.1-ready/ClassRoomSTORM_Source
-python tools/build_user_packages.py --validate --output-dir ../releases/ClassRoomSTORM-1.2.1-ready
+python tools/prepare_github_release.py --validate-source ../releases/ClassRoomSTORM-1.2.2-ready/ClassRoomSTORM_Source
+python tools/build_user_packages.py --validate --output-dir ../releases/ClassRoomSTORM-1.2.2-ready
 ```
 
 To refresh the adjacent classroom packages only, run `python tools/build_user_packages.py`.
@@ -73,6 +73,6 @@ use the maintained checkout; `.gitignore` does not untrack historical commits.
 
 Check the repository URL with `git remote -v`, create or choose the intended
 branch, review `git diff` and `git status`, then commit and push when ready.
-Wait for the GitHub checks to pass before tagging `v1.2.1` or publishing a release.
+Wait for the GitHub checks to pass before tagging `v1.2.2` or publishing a release.
 Attach the Windows/macOS ZIPs and `SHA256SUMS.txt` as release downloads. The
 preparation tool performs no commit, remote setup, push, tag or publication.

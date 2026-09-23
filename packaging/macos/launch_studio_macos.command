@@ -1,11 +1,19 @@
 #!/bin/bash
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" || exit 1
 
 if [ -x ".venv/bin/python" ]; then
     PYEXE=".venv/bin/python"
 else
-    echo "Local environment was not found. Trying system python3."
-    PYEXE="python3"
+    echo "Please run setup_macos.command first."
+    read -r -p "Press Return to close."
+    exit 1
+fi
+
+if ! "$PYEXE" -c 'import sys; raise SystemExit(0 if (3, 10) <= sys.version_info[:2] < (3, 14) else 1)' >/dev/null 2>&1; then
+    echo "The local Python environment needs to be replaced."
+    echo "Run setup_macos.command to select Python 3.10-3.13 and preserve the old environment."
+    read -r -p "Press Return to close."
+    exit 1
 fi
 
 if ! "$PYEXE" -c "import numpy, cv2, matplotlib, PIL, PySide6" >/dev/null 2>&1; then

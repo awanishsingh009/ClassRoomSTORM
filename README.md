@@ -1,11 +1,11 @@
 # ClassRoomSTORM Studio V1.2
 
-Current patch version: **1.2.1**. The application and manuals use the V1.2 series name.
+Current patch version: **1.2.2**. The application and manuals use the V1.2 series name.
 
 [![Tests](https://github.com/awanishsingh009/ClassRoomSTORM/actions/workflows/tests.yml/badge.svg)](https://github.com/awanishsingh009/ClassRoomSTORM/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Download v1.2.1:** [Windows ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.1/ClassRoomSTORM-1.2.1-windows.zip) | [macOS ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.1/ClassRoomSTORM-1.2.1-macos.zip) | [Source ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.1/ClassRoomSTORM-1.2.1-source.zip)
+**Download v1.2.2:** [Windows ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.2/ClassRoomSTORM-1.2.2-windows.zip) | [macOS ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.2/ClassRoomSTORM-1.2.2-macos.zip) | [Source ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.2/ClassRoomSTORM-1.2.2-source.zip)
 
 Students: choose your Windows or macOS package, extract the ZIP, run setup once, then open the launcher. [See installation steps and all downloads below.](#downloads)
 
@@ -96,7 +96,7 @@ Truth comparison uses one-to-one same-frame matching with `--truth-radius-px 2`,
 
 Build manuals with `python tools/build_docs.py`. Refresh adjacent Windows and macOS packages with `python tools/build_user_packages.py`; previous packages and their results move to `../archive/user_packages/`. Verify shipped hashes and equality to the current source with `python tools/build_user_packages.py --validate`.
 
-For a future GitHub update, follow [the release instructions](docs/RELEASE.md). `python tools/prepare_github_release.py --output ../releases/ClassRoomSTORM-1.2.1-ready` creates a clean source folder and separate source/Windows/macOS ZIPs with checksums. It does not commit or publish anything.
+For a future GitHub update, follow [the release instructions](docs/RELEASE.md). `python tools/prepare_github_release.py --output ../releases/ClassRoomSTORM-1.2.2-ready` creates a clean source folder and separate source/Windows/macOS ZIPs with checksums. It does not commit or publish anything.
 
 ## Revised scientific figures
 
@@ -104,13 +104,13 @@ The physics-reviewed figure sources, fixed-seed data and build instructions are 
 
 ## Downloads
 
-Choose one of these three **v1.2.1** downloads. Windows and macOS packages include the setup scripts, launcher, sample data, and Help and Theory PDFs.
+Choose one of these three **v1.2.2** downloads. Windows and macOS packages include the setup scripts, launcher, sample data, and Help and Theory PDFs.
 
 | Package | Direct download | After extracting the ZIP |
 | --- | --- | --- |
-| **Windows** | **[Download Windows ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.1/ClassRoomSTORM-1.2.1-windows.zip)** | Open `ClassRoomSTORM_V1_User_windows`, run `setup_windows.bat` once, then use `launch_studio_windows.bat`. |
-| **macOS** | **[Download macOS ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.1/ClassRoomSTORM-1.2.1-macos.zip)** | Open `ClassRoomSTORM_V1_User_macos`, run `setup_macos.command` once, then use `launch_studio_macos.command`. |
-| **Source** | **[Download source ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.1/ClassRoomSTORM-1.2.1-source.zip)** | Open `ClassRoomSTORM_Source` and follow [Run from source](#run-from-source). Includes code, tests, and editable documentation and figures. |
+| **Windows** | **[Download Windows ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.2/ClassRoomSTORM-1.2.2-windows.zip)** | Open `ClassRoomSTORM_V1_User_windows`, run `setup_windows.bat` once, then use `launch_studio_windows.bat`. |
+| **macOS** | **[Download macOS ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.2/ClassRoomSTORM-1.2.2-macos.zip)** | Open `ClassRoomSTORM_V1_User_macos`, run `setup_macos.command` once, then use `launch_studio_macos.command`. |
+| **Source** | **[Download source ZIP](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.2/ClassRoomSTORM-1.2.2-source.zip)** | Open `ClassRoomSTORM_Source` and follow [Run from source](#run-from-source). Includes code, tests, and editable documentation and figures. |
 
 ### First installation
 
@@ -119,6 +119,12 @@ Choose one of these three **v1.2.1** downloads. Windows and macOS packages inclu
 3. Run the setup file listed above while connected to the internet and wait for **"Setup completed"**. If Windows setup installs Python, run setup again afterward. Compatible local wheels can be used for offline installation as described in `README_FIRST.txt`.
 4. Open the launcher. On later visits, use the launcher directly. Complete this first installation before the practical session.
 
+### macOS setup troubleshooting
+
+If an earlier setup used Apple's Python 3.9 and failed while installing PySide6, install Python 3.11, 3.12, or 3.13 and run the updated `setup_macos.command`. Version 1.2.2 checks the interpreter before installing packages, preserves an unsupported `.venv` as `.venv-backup-*`, and creates a supported environment. Existing results stay in place.
+
+For a developer-verification warning, try opening the script, then approve that specific file under **System Settings > Privacy & Security > Open Anyway**. If the message is **Permission denied**, run `chmod u+x setup_macos.command launch_studio_macos.command` from Terminal in the extracted package folder. See `README_FIRST.txt` for details.
+
 If you downloaded **Code > Download ZIP**, you have the repository source. Use the **Windows** or **macOS** links above to get the student package with setup and launch files in its main folder. For platform-specific help, open `README_FIRST.txt` in the extracted package.
 
-[Release notes and all assets](https://github.com/awanishsingh009/ClassRoomSTORM/releases/tag/v1.2.1) | [SHA-256 checksums](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.1/SHA256SUMS.txt)
+[Release notes and all assets](https://github.com/awanishsingh009/ClassRoomSTORM/releases/tag/v1.2.2) | [SHA-256 checksums](https://github.com/awanishsingh009/ClassRoomSTORM/releases/download/v1.2.2/SHA256SUMS.txt)
